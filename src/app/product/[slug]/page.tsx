@@ -3,17 +3,18 @@
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { PRODUCTS, REVIEWS as MOCK_REVIEWS } from '@/data/mock';
-import ProductCard from '@/components/store/ProductCard';
+import ProductCardCategory from '@/components/store/ProductCardCategory';
 import { useCartStore } from '@/store/cartStore';
 import { cn, formatPrice } from '@/lib/utils';
 import { Star } from 'lucide-react';
 
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
+  const router = useRouter();
   const { addToCart } = useCartStore();
   const [mounted, setMounted] = useState(false);
 
@@ -65,6 +66,16 @@ export default function ProductDetailPage() {
     addToCart(product, qty, selectedSize, colorObj);
   };
 
+  const handleBuyNow = () => {
+    if (product.sizes.length > 0 && !selectedSize) {
+      setSizeError(true);
+      return;
+    }
+    const colorObj = product.colors.find(c => c.name === selectedColor) || product.colors[0];
+    addToCart(product, qty, selectedSize, colorObj);
+    router.push('/cart');
+  };
+
   return (
     <div className="text-[#333] leading-relaxed bg-white">
       {/* Breadcrumb */}
@@ -114,7 +125,7 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Info */}
-          <div className="lg:max-h-[calc(100vh-90px)] lg:overflow-y-auto lg:pr-2.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-[#f1f1f1] [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-[#ccc]">
+          <div className="lg:sticky lg:top-[90px] h-fit lg:pr-2.5">
             <h1 className="mb-3 text-[32px] font-bold uppercase tracking-wider text-[#333]">{product.name}</h1>
             <div className="mb-2 text-2xl font-semibold text-[#333]">{formatPrice(product.price)}</div>
             {product.oldPrice && (
@@ -168,11 +179,18 @@ export default function ProductDetailPage() {
               </div>
               <button 
                 onClick={handleAddToCart}
-                className="h-[52px] flex-1 bg-[#1a3a5c] text-sm font-semibold uppercase tracking-wider text-white transition-colors hover:bg-[#0f2540]"
+                className="h-[52px] flex-1 border border-[#1a3a5c] text-[#1a3a5c] text-sm font-semibold uppercase tracking-wider bg-white transition-colors hover:bg-gray-50"
               >
                 Add to Cart
               </button>
             </div>
+
+            <button 
+              onClick={handleBuyNow}
+              className="mb-3 w-full h-[52px] bg-[#1a3a5c] text-sm font-semibold uppercase tracking-wider text-white transition-colors hover:bg-[#0f2540]"
+            >
+              Buy Now
+            </button>
 
             <div className="mb-5 flex flex-col gap-3">
               <div className="flex items-center gap-3 text-sm text-[#555]"><span className="text-lg text-[#25d366]">💬</span> Ask an Expert</div>
@@ -281,7 +299,7 @@ export default function ProductDetailPage() {
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-[18px]">
               {sec.items.map((p) => (
-                <ProductCard key={p.id} product={p} />
+                <ProductCardCategory key={p.id} product={p} />
               ))}
             </div>
           </div>

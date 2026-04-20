@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cartStore';
 import { PRODUCTS } from '@/data/mock';
-import ProductCard from '@/components/store/ProductCard';
+import ProductCardCategory from '@/components/store/ProductCardCategory';
 import { formatPrice } from '@/lib/utils';
 import { Truck } from 'lucide-react';
 
@@ -213,7 +213,7 @@ const CartPage: React.FC = () => {
               >
                 {recProducts.map((product) => (
                   <div key={product.id} className="min-w-[280px] flex-[0_0_280px]">
-                    <ProductCard product={product} />
+                    <ProductCardCategory product={product} />
                   </div>
                 ))}
               </div>
