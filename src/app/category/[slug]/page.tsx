@@ -6,6 +6,7 @@ import { ChevronRight, Filter } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { PRODUCTS } from '@/data/mock';
 import { formatPrice } from '@/lib/utils';
+import ProductCardCategory from '@/components/store/ProductCardCategory';
 
 export default function CategoryPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -25,11 +26,15 @@ export default function CategoryPage() {
 
   const categoryName = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
-  const categoryProducts = useMemo(() =>
-    PRODUCTS.filter(p => p.category.toLowerCase() === slug.toLowerCase() ||
-      p.category.toLowerCase().replace(/ /g, '-') === slug.toLowerCase()),
-    [slug]
-  );
+  const categoryProducts = useMemo(() => {
+    if (slug.toLowerCase() === 'flash-sale' || slug.toLowerCase() === 'flash sale') {
+      return PRODUCTS.filter(p => p.isFlashSale);
+    }
+    return PRODUCTS.filter(p => 
+      p.category.toLowerCase() === slug.toLowerCase() ||
+      p.category.toLowerCase().replace(/ /g, '-') === slug.toLowerCase()
+    );
+  }, [slug]);
 
   const handleLayoutChange = (cols: number) => {
     if (!isMobile) setGridCols(cols);
@@ -133,56 +138,9 @@ export default function CategoryPage() {
             }}
           >
             {categoryProducts.map((product) => {
-              const slug = product.name.toLowerCase().replace(/ /g, '-');
-              const installment = formatPrice(product.price / 3);
 
               return (
-                <Link
-                  key={product.id}
-                  href={`/product/${slug}`}
-                  className="group relative cursor-pointer overflow-hidden rounded-lg bg-[#f5f5f5] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] block"
-                >
-                  <div className="relative aspect-[3/4] overflow-hidden rounded-lg">
-                    <img
-                      src={product.images[0]}
-                      alt={product.name}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                    />
-                    {product.isSale && (
-                      <span className="absolute left-3 top-3 z-[2] text-[11px] font-bold uppercase tracking-wider text-[#c44b3f]">
-                        SALE
-                      </span>
-                    )}
-                    {product.colors && product.colors.length > 0 && (
-                      <div className="absolute bottom-3 left-1/2 z-[2] flex -translate-x-1/2 gap-1.5 rounded-full bg-white/95 px-2.5 py-1.5 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
-                        {product.colors.slice(0, 4).map((color, idx) => (
-                          <div
-                            key={idx}
-                            title={color.name}
-                            className={`h-4 w-4 flex-shrink-0 rounded-full border border-black/15 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.5)] transition-all hover:ring-1 hover:ring-black/40`}
-                            style={{ backgroundColor: color.hex }}
-                          />
-                        ))}
-                        {product.colors.length > 4 && (
-                          <div className="flex h-4 min-w-[22px] items-center justify-center rounded-lg border border-[#e5e5e5] bg-white px-1 text-[10px] font-semibold text-[#888]">
-                            +{product.colors.length - 4}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <div className="px-3 pb-5 pt-4 text-center bg-transparent">
-                    <h3 className="mb-2 flex min-h-[36px] items-center justify-center text-[13px] font-bold uppercase leading-snug tracking-wide text-[#1a1a1a]">
-                      {product.name}
-                    </h3>
-                    <div className="mb-2 text-[15px] font-semibold text-[#1a1a1a]">{formatPrice(product.price)}</div>
-                    <div className="text-[13px] leading-relaxed text-[#888]">
-                      or pay in 3 x <strong className="text-[#1a1a1a]">{installment}</strong> with
-                      <br />
-                      KOKO
-                    </div>
-                  </div>
-                </Link>
+                  <ProductCardCategory key={product.id} product={product} />
               );
             })}
           </div>

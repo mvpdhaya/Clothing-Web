@@ -6,7 +6,7 @@ import React, { useState, useMemo, Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronDown, Filter as FilterIcon, X } from 'lucide-react';
-import { PRODUCTS, CATEGORIES } from '@/data/mock';
+import { PRODUCTS } from '@/data/mock';
 import { cn, formatPrice } from '@/lib/utils';
 import ProductCardCategory from '@/components/store/ProductCardCategory';
 
@@ -26,8 +26,10 @@ const SORT_OPTIONS = [
 function ProductsContent() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('category');
+  const initialSubcategory = searchParams.get('subcategory');
 
   const [category, setCategory] = useState<string | null>(initialCategory);
+  const [subcategory, setSubcategory] = useState<string | null>(initialSubcategory);
   const [sizes, setSizes] = useState<string[]>([]);
   const [sort, setSort] = useState('newest');
   const [gridCols, setGridCols] = useState(4);
@@ -49,16 +51,19 @@ function ProductsContent() {
     let list = [...PRODUCTS];
     if (category === 'Sale') list = list.filter(p => p.isSale);
     else if (category) list = list.filter(p => p.category === category);
+    
+    if (subcategory) list = list.filter(p => p.subcategory === subcategory);
+
     if (sizes.length > 0) list = list.filter(p => p.sizes.some(s => sizes.includes(s)));
     if (sort === 'price-low') list.sort((a, b) => a.price - b.price);
     if (sort === 'price-high') list.sort((a, b) => b.price - a.price);
     return list;
-  }, [category, sizes, sort]);
+  }, [category, subcategory, sizes, sort]);
 
   const toggleSize = (s: string) =>
     setSizes(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
 
-  const clearAll = () => { setCategory(null); setSizes([]); setSort('newest'); };
+  const clearAll = () => { setCategory(null); setSubcategory(null); setSizes([]); setSort('newest'); };
 
   const handleLayoutChange = (cols: number) => {
     if (!isMobile) setGridCols(cols);
@@ -86,11 +91,11 @@ function ProductsContent() {
             Home
           </Link>
           <span className="mx-2">/</span>
-          <span className="font-semibold text-white">{category || 'Collections'}</span>
+          <span className="font-semibold text-white">{subcategory || category || 'Collections'}</span>
         </div>
 
         <h1 className="relative z-10 text-[32px] font-bold uppercase tracking-[0.2em] text-white drop-shadow-lg lg:text-[48px] italic">
-          {category || 'Our Collections'}
+          {subcategory || category || 'Our Collections'}
         </h1>
       </section>
 

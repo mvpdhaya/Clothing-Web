@@ -3,15 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 
-interface Product {
-  id: number;
-  name: string;
-  price: string;
-  installment: string;
-  image: string;
-  badge?: string;
-  colors?: { name: string; hex: string }[];
-}
+import { Product } from '@/data/mock';
+import { formatPrice } from '@/lib/utils';
 
 interface Props {
   product: Product;
@@ -23,14 +16,19 @@ const ProductCardHome: React.FC<Props> = ({ product }) => {
   return (
     <Link href={`/product/${slug}`} className="group bg-[#f7f7f7] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer block rounded-md overflow-hidden">
       <div className="relative bg-gray-100 overflow-hidden aspect-[3/4] rounded-md">
-        {product.badge && (
+        {product.isNew && (
           <span className="absolute top-4 left-4 bg-red-400 text-white px-3 py-1 text-xs font-semibold z-10">
-            {product.badge}
+            NEW
+          </span>
+        )}
+        {!product.isNew && product.isSale && (
+          <span className="absolute top-4 left-4 bg-gray-800 text-white px-3 py-1 text-xs font-semibold z-10">
+            SALE
           </span>
         )}
 
         <img
-          src={product.image}
+          src={product.images[0]}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
@@ -40,7 +38,7 @@ const ProductCardHome: React.FC<Props> = ({ product }) => {
         <h3 className="text-[13px] font-semibold text-gray-800 uppercase tracking-wide leading-tight">
           {product.name}
         </h3>
-        <div className="text-xs font-semibold text-gray-500 mt-0.5">{product.price}</div>
+        <div className="text-xs font-semibold text-gray-500 mt-0.5">{formatPrice(product.price)}</div>
         
         {product.colors && product.colors.length > 0 && (
           <div className="mt-4 flex items-center justify-center gap-2">

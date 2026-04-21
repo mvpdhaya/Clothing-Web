@@ -8,8 +8,6 @@ export interface Product {
   images: string[];
   sizes: string[];
   colors: { name: string; hex: string }[];
-  reviews: number;
-  rating: number;
   isNew?: boolean;
   isSale?: boolean;
   material?: string;

@@ -6,11 +6,10 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { PRODUCTS, REVIEWS as MOCK_REVIEWS } from '@/data/mock';
+import { PRODUCTS } from '@/data/mock';
 import ProductCardCategory from '@/components/store/ProductCardCategory';
 import { useCartStore } from '@/store/cartStore';
 import { cn, formatPrice } from '@/lib/utils';
-import { Star } from 'lucide-react';
 
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -51,7 +50,6 @@ export default function ProductDetailPage() {
 
   const related = PRODUCTS.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
   const accessories = PRODUCTS.filter(p => p.category !== product.category).slice(0, 4);
-  const productReviews = MOCK_REVIEWS.filter(r => r.productId === product.id);
 
   const chgImg = (d: number) => setCurrentImg((p) => (p + d + product.images.length) % product.images.length);
   const updQty = (d: number) => setQty((p) => Math.max(1, p + d));
@@ -230,58 +228,6 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      {/* Reviews */}
-      <section className="mb-12 bg-[#f5f5f5] py-12">
-        <div className="mx-auto max-w-[1400px] px-5">
-          <div className="mb-6 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="relative h-14 w-14 overflow-hidden rounded-xl bg-white border border-gray-200">
-                <Image src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=100&h=100&fit=crop" alt="" fill className="object-cover" />
-              </div>
-              <div>
-                <h4 className="text-base font-semibold text-[#333]">LUMIÈRE Reviews</h4>
-                <div className="mt-0.5 flex items-center gap-1.5 text-sm">
-                  <span className="font-bold text-[#f5a623]">{product.rating}</span>
-                  <div className="flex text-[#ffc107]">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className={cn("w-3 h-3 transition-colors", i < Math.floor(product.rating) ? "fill-current" : "text-gray-300 fill-none")} />
-                    ))}
-                  </div>
-                  <span className="text-[#999]">{product.reviews} reviews on <span className="font-semibold text-[#4285F4]">Google</span></span>
-                </div>
-              </div>
-            </div>
-            <button className="rounded border border-[#ddd] bg-white px-5 py-2.5 text-sm font-semibold transition-all hover:border-[#333] hover:bg-[#333] hover:text-white">Leave a Review</button>
-          </div>
-          <div className="relative">
-            <div className="grid gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
-              {productReviews.length > 0 ? productReviews.map((r, i) => (
-                <div key={i} className="rounded-[14px] bg-white p-[22px] shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-                  <div className="mb-2.5 flex items-start justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="relative h-9 w-9 overflow-hidden rounded-full bg-gray-100">
-                        <Image src={r.avatar} alt="" fill className="object-cover" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold text-[#333]">{r.user}</div>
-                        <div className="text-xs text-[#999]">{r.date}</div>
-                      </div>
-                    </div>
-                    <span className="text-[#4285F4] font-bold">G</span>
-                  </div>
-                  <div className="mb-2.5 flex gap-0.5 text-[#ffc107]">
-                    {[...Array(5)].map((_, j) => <Star key={j} className={cn("w-3 h-3", j < r.rating ? "fill-current" : "text-gray-200")} />)}
-                  </div>
-                  <p className="mb-2 text-sm leading-relaxed text-[#444] line-clamp-3">{r.comment}</p>
-                  <span className="cursor-pointer text-sm font-medium text-[#333] underline">Show more</span>
-                </div>
-              )) : (
-                <div className="col-span-3 text-center py-10 text-gray-400 italic">No reviews yet for this product.</div>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Related Products */}
       {[

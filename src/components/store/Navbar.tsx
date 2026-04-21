@@ -7,37 +7,19 @@ import {
   User,
   Search,
   ChevronDown,
-  LayoutGrid,
 } from 'lucide-react';
+import { CATEGORY_NAV } from '@/data/mock';
 
 const Navbar: React.FC = () => {
-  const navItems = [
-    { 
-      label: 'CLOTHING', 
-      href: '/products',
-      hasDropdown: true,
-      subcategories: [
-        { label: 'All Clothing', href: '/products' },
-        { label: 'Shirts', href: '/products?category=Shirts' },
-        { label: 'T-Shirts', href: '/products?category=T-Shirts' },
-        { label: 'Pants', href: '/products?category=Pants' },
-        { label: 'Jeans', href: '/products?category=Jeans' }
-      ]
-    },
-    { 
-      label: 'ACCESSORIES', 
-      href: '/category/accessories',
-      hasDropdown: true,
-      subcategories: [
-        { label: 'All Accessories', href: '/category/accessories' },
-        { label: 'Belts', href: '/category/accessories?type=Belts' },
-        { label: 'Watches', href: '/category/accessories?type=Watches' },
-        { label: 'Wallets', href: '/category/accessories?type=Wallets' },
-        { label: 'Sunglasses', href: '/category/accessories?type=Sunglasses' }
-      ]
-    },
-    { label: 'FLASH SALE', href: '/category/sale', hasDropdown: false }
-  ];
+  const navItems = CATEGORY_NAV.map(cat => ({
+    label: cat.label.toUpperCase(),
+    href: cat.id === 'Flash Sale' ? '/category/Flash Sale' : `/category/${cat.id.toLowerCase()}`,
+    hasDropdown: cat.subcategories.length > 0,
+    subcategories: cat.subcategories.map(sub => ({
+      label: sub.label,
+      href: sub.id === `All ${cat.label}` ? `/category/${cat.id.toLowerCase()}` : `/products?subcategory=${sub.id}`
+    }))
+  }));
 
   return (
     <>
@@ -79,9 +61,9 @@ const Navbar: React.FC = () => {
                 {/* Dropdown Menu */}
                 {item.hasDropdown && (
                   <div className="absolute top-[100%] left-0 w-56 bg-white shadow-xl border border-gray-100 py-3 opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-300 z-50">
-                    {item.subcategories?.map((sub) => (
+                    {item.subcategories?.map((sub, idx) => (
                       <Link
-                        key={sub.label}
+                        key={`${sub.label}-${idx}`}
                         href={sub.href}
                         className="block px-6 py-2.5 text-[13px] font-medium text-gray-600 hover:text-red-400 hover:bg-gray-50 transition-colors uppercase tracking-wider"
                       >

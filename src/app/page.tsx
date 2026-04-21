@@ -1,100 +1,24 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
-  Heart,
   ChevronLeft,
   ChevronRight,
   Camera,
 } from 'lucide-react';
 import Link from 'next/link';
 import ProductCardHome from '@/components/store/ProductCardHome';
-import { Product as GlobalProduct } from '@/data/mock';
-
-interface Product {
-  id: number;
-  name: string;
-  price: string;
-  installment: string;
-  image: string;
-  badge?: string;
-  colors?: { name: string; hex: string }[];
-}
-
-interface Category {
-  id: number;
-  name: string;
-  image: string;
-}
-
-interface InstagramPost {
-  id: number;
-  image: string;
-}
-
-const newArrivals: Product[] = [
-  {
-    id: 1,
-    name: 'DESIGUAL PRINTED SS SHIRT',
-    price: 'RS 4,950.00',
-    installment: 'Rs 1,650.00',
-    image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400&h=500&fit=crop',
-    badge: 'NEW',
-    colors: [{ name: 'Orange', hex: '#f97316' }, { name: 'White', hex: '#ffffff' }],
-  },
-  {
-    id: 2,
-    name: 'ZARA LINEN BLEND MANDARIN LS SHIRT',
-    price: 'RS 5,950.00',
-    installment: 'Rs 1,983.33',
-    image: 'https://images.unsplash.com/photo-1598032895397-b9472444bf93?w=400&h=500&fit=crop',
-    badge: 'NEW',
-    colors: [{ name: 'Navy', hex: '#1e3a8a' }, { name: 'Tan', hex: '#d2b48c' }],
-  },
-  {
-    id: 3,
-    name: 'SQUALO KNIT POLO 7051',
-    price: 'RS 5,950.00',
-    installment: 'Rs 1,983.33',
-    image: 'https://images.unsplash.com/photo-1625910513413-5fc4e5e6727b?w=400&h=500&fit=crop',
-    badge: 'NEW',
-    colors: [{ name: 'Green', hex: '#166534' }, { name: 'Gray', hex: '#6b7280' }],
-  },
-  {
-    id: 4,
-    name: 'DOBBY CHECK LS SHIRT 4682',
-    price: 'RS 5,950.00',
-    installment: 'Rs 1,983.33',
-    image: 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=400&h=500&fit=crop',
-    badge: 'NEW',
-    colors: [{ name: 'Blue', hex: '#2563eb' }, { name: 'Black', hex: '#000000' }],
-  },
-  {
-    id: 5,
-    name: 'EMBROIDED BAGGY DENIM 26504',
-    price: 'RS 12,950.00',
-    installment: 'Rs 4,316.66',
-    image: 'https://images.unsplash.com/photo-1542272604-787c3839105e?w=400&h=500&fit=crop',
-    badge: 'NEW',
-    colors: [{ name: 'Denim', hex: '#1e3a5f' }],
-  },
-];
-
-const categories: Category[] = [
-  { id: 1, name: 'LONG SLEEVE\nSHIRTS', image: 'https://images.unsplash.com/photo-1598032895397-b9472444bf93?w=400&h=600&fit=crop' },
-  { id: 2, name: 'POLO TEES', image: 'https://images.unsplash.com/photo-1625910513413-5fc4e5e6727b?w=400&h=600&fit=crop' },
-  { id: 3, name: 'TROUSERS', image: 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400&h=600&fit=crop' },
-  { id: 4, name: 'DENIMS', image: 'https://images.unsplash.com/photo-1542272604-787c3839105e?w=400&h=600&fit=crop' },
-];
-
-const instagramPosts: InstagramPost[] = [
-  { id: 1, image: 'https://images.unsplash.com/photo-1516257984-b1b4d707412e?w=400&h=500&fit=crop' },
-  { id: 2, image: 'https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?w=400&h=500&fit=crop' },
-  { id: 3, image: 'https://images.unsplash.com/photo-1504194921103-f8b80cadd5e4?w=400&h=500&fit=crop' },
-  { id: 4, image: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=400&h=500&fit=crop' },
-];
+import { 
+  Product, 
+  getNewArrivals, 
+  getOnSale, 
+  getFlashSale, 
+  BANNERS, 
+  CATEGORY_NAV 
+} from '@/data/mock';
 
 const Hero: React.FC = () => {
+  const banner = BANNERS[1]; // New Season Arrivals
   return (
     <section className="bg-gray-100 py-20">
       <div className="max-w-[1400px] mx-auto px-5">
@@ -112,13 +36,13 @@ const Hero: React.FC = () => {
               Stylish
               <span className="w-10 h-px bg-gray-800"></span>
             </p>
-            <h1 className="text-5xl font-semibold text-gray-800 mb-4">Male Clothes</h1>
-            <p className="text-gray-500 mb-8">30% off Summer Vacation</p>
+            <h1 className="text-5xl font-semibold text-gray-800 mb-4">{banner.title}</h1>
+            <p className="text-gray-500 mb-8">{banner.subtitle}</p>
             <Link
-              href="/products"
+              href={banner.link}
               className="inline-block px-9 py-3 border-2 border-gray-800 text-gray-800 font-medium hover:bg-gray-800 hover:text-white transition-all underline-none"
             >
-              SHOP NOW
+              {banner.cta}
             </Link>
           </div>
         </div>
@@ -127,49 +51,74 @@ const Hero: React.FC = () => {
   );
 };
 
-// Using imported ProductCardHome
-
 const ProductCarousel: React.FC<{
   title: string;
   subtitle: string;
   products: Product[];
   sectionKey: string;
 }> = ({ title, subtitle, products, sectionKey }) => {
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+
+  const handleScroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const { scrollLeft, clientWidth } = scrollRef.current;
+      const scrollAmount = clientWidth * 0.8; // Scroll 80% of the visible width
+      const targetScroll = direction === 'left' 
+        ? scrollLeft - scrollAmount 
+        : scrollLeft + scrollAmount;
+      
+      scrollRef.current.scrollTo({
+        left: targetScroll,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-20 bg-gray-50 overflow-hidden">
       <div className="max-w-[1400px] mx-auto px-5">
-        <div className="flex items-center justify-between mb-12 px-[60px]">
+        <div className="flex items-center justify-between mb-12 px-2 md:px-[60px]">
           <div>
             <h2 className="text-3xl font-semibold text-gray-800 uppercase tracking-wide">{title}</h2>
             <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
           </div>
           <Link
             href="/products"
-            className="px-6 py-2 border-2 border-gray-800 text-gray-800 text-sm font-medium uppercase tracking-wide hover:bg-gray-800 hover:text-white transition-all"
+            className="px-6 py-2 border-2 border-gray-800 text-gray-800 text-sm font-medium uppercase tracking-wide hover:bg-gray-800 hover:text-white transition-all whitespace-nowrap"
           >
             SHOP ALL
           </Link>
         </div>
       </div>
 
-      <div className="relative px-[60px]">
-        <button className="absolute left-0 top-[40%] -translate-y-1/2 w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-800 hover:bg-gray-800 hover:text-white hover:border-gray-800 transition-all shadow-md z-10">
+      <div className="relative px-2 md:px-[60px]">
+        <button 
+          onClick={() => handleScroll('left')}
+          className="absolute left-0 md:left-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-800 hover:bg-gray-800 hover:text-white hover:border-gray-800 transition-all shadow-md z-10"
+          aria-label="Scroll left"
+        >
           <ChevronLeft size={20} />
         </button>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+        <div 
+          ref={scrollRef}
+          className="flex overflow-x-auto gap-5 no-scrollbar scroll-smooth pb-4"
+        >
           {products.map((product) => {
             const key = `${sectionKey}-${product.id}`;
             return (
-              <ProductCardHome
-                key={key}
-                product={product as any}
-              />
+              <div key={key} className="flex-none w-[280px] sm:w-[320px] lg:w-[calc((100%-80px)/5)]">
+                <ProductCardHome product={product} />
+              </div>
             );
           })}
         </div>
 
-        <button className="absolute right-0 top-[40%] -translate-y-1/2 w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-800 hover:bg-gray-800 hover:text-white hover:border-gray-800 transition-all shadow-md z-10">
+        <button 
+          onClick={() => handleScroll('right')}
+          className="absolute right-0 md:right-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-800 hover:bg-gray-800 hover:text-white hover:border-gray-800 transition-all shadow-md z-10"
+          aria-label="Scroll right"
+        >
           <ChevronRight size={20} />
         </button>
       </div>
@@ -188,16 +137,16 @@ const CategoryShowcase: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1">
-          {categories.map((category) => (
-            <Link key={category.id} href={`/products?category=${category.name.replace('\n', ' ')}`} className="relative overflow-hidden aspect-[3/4] cursor-pointer group block">
+          {CATEGORY_NAV.map((category) => (
+            <Link key={category.id} href={`/category/${category.id.toLowerCase()}`} className="relative overflow-hidden aspect-[3/4] cursor-pointer group block">
               <img
                 src={category.image}
-                alt={category.name.replace('\n', ' ')}
+                alt={category.label}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors flex items-center justify-center">
                 <h3 className="text-white text-lg font-bold uppercase tracking-wide text-center whitespace-pre-line">
-                  {category.name}
+                  {category.label}
                 </h3>
               </div>
             </Link>
@@ -209,25 +158,26 @@ const CategoryShowcase: React.FC = () => {
 };
 
 const PromoBanner: React.FC = () => {
+  const banner = BANNERS[0]; // Flash Sale
   return (
     <section className="bg-black relative overflow-hidden">
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[500px]">
         <div className="flex flex-col justify-center p-20 text-white z-10">
-          <h2 className="text-5xl font-bold mb-5 uppercase tracking-wider">SQUALO PURE LINEN</h2>
+          <h2 className="text-5xl font-bold mb-5 uppercase tracking-wider">{banner.title}</h2>
           <p className="text-gray-300 mb-10 max-w-md leading-relaxed">
-            Squale Is with Mora providing elegance with squale pure linen collection
+            {banner.subtitle}
           </p>
           <Link
-            href="/products"
+            href={banner.link}
             className="inline-block px-12 py-4 border-2 border-white text-white font-semibold uppercase tracking-widest hover:bg-white hover:text-black transition-all w-fit"
           >
-            SHOP NOW
+            {banner.cta}
           </Link>
         </div>
         <div className="relative overflow-hidden">
           <img
-            src="https://images.unsplash.com/photo-1598032895397-b9472444bf93?w=800&h=600&fit=crop"
-            alt="Squalo Pure Linen"
+            src={banner.image}
+            alt={banner.title}
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent"></div>
@@ -252,7 +202,7 @@ const DealsSection: React.FC = () => {
               <span className="text-sm tracking-widest mb-2 block">END OF SEASON</span>
               <h3 className="text-3xl font-bold mb-5 leading-tight">Summer Sale Up to 50% Off</h3>
               <Link
-                href="/products?category=Sale"
+                href="/products?category=Flash Sale"
                 className="inline-block px-9 py-3 border-2 border-white text-white font-medium hover:bg-white hover:text-gray-800 transition-all"
               >
                 SHOP NOW
@@ -284,6 +234,13 @@ const DealsSection: React.FC = () => {
 };
 
 const InstagramStrip: React.FC = () => {
+  const instagramPosts = [
+    { id: 1, image: 'https://images.unsplash.com/photo-1516257984-b1b4d707412e?w=400&h=500&fit=crop' },
+    { id: 2, image: 'https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?w=400&h=500&fit=crop' },
+    { id: 3, image: 'https://images.unsplash.com/photo-1504194921103-f8b80cadd5e4?w=400&h=500&fit=crop' },
+    { id: 4, image: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=400&h=500&fit=crop' },
+  ];
+
   return (
     <section className="py-20 bg-white">
       <div className="max-w-[1400px] mx-auto px-5">
@@ -332,7 +289,7 @@ export default function App() {
       <ProductCarousel
         title="NEW ARRIVALS"
         subtitle="For those who deserve elegance & classy look everyday"
-        products={newArrivals}
+        products={getNewArrivals()}
         sectionKey="new"
       />
       <CategoryShowcase />
@@ -340,15 +297,15 @@ export default function App() {
       <ProductCarousel
         title="FLASH SALE"
         subtitle="For those who deserve elegance & classy look everyday"
-        products={newArrivals}
+        products={getFlashSale()}
         sectionKey="flash"
       />
       <DealsSection />
       <ProductCarousel
-        title="ACCESSORIES COLLECTION"
+        title="ON SALE"
         subtitle="For those who deserve elegance & classy look everyday"
-        products={newArrivals}
-        sectionKey="accessories"
+        products={getOnSale()}
+        sectionKey="onsale"
       />
       <InstagramStrip />
     </div>
