@@ -77,9 +77,9 @@ const ProductCarousel: React.FC<{
   };
 
   return (
-    <section className="py-20 bg-white overflow-hidden">
+    <section className="py-14 bg-white">
       <div className="max-w-[1400px] mx-auto px-5">
-        <div className="flex items-center justify-between mb-12 px-2 md:px-[60px]">
+        <div className="flex items-center justify-between mb-10 md:px-[60px]">
           <div>
             <h2 className="text-3xl font-semibold text-gray-800 uppercase tracking-wide">{title}</h2>
             <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
@@ -91,38 +91,38 @@ const ProductCarousel: React.FC<{
             SHOP ALL
           </Link>
         </div>
-      </div>
 
-      <div className="relative px-2 md:px-[60px]">
-        <button 
-          onClick={() => handleScroll('left')}
-          className="absolute left-0 md:left-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-800 hover:bg-gray-800 hover:text-white hover:border-gray-800 transition-all shadow-md z-10"
-          aria-label="Scroll left"
-        >
-          <ChevronLeft size={20} />
-        </button>
+        <div className="relative md:px-[60px]">
+          <button 
+            onClick={() => handleScroll('left')}
+            className="absolute -left-2 md:left-0 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-800 hover:bg-gray-800 hover:text-white hover:border-gray-800 transition-all shadow-md z-10"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft size={20} />
+          </button>
 
-        <div 
-          ref={scrollRef}
-          className="flex overflow-x-auto gap-5 no-scrollbar scroll-smooth pb-4"
-        >
-          {products.map((product) => {
-            const key = `${sectionKey}-${product.id}`;
-            return (
-              <div key={key} className="flex-none w-[280px] sm:w-[320px] lg:w-[calc((100%-80px)/5)]">
-                <ProductCardHome product={product} />
-              </div>
-            );
-          })}
+          <div 
+            ref={scrollRef}
+            className="flex overflow-x-auto gap-5 no-scrollbar scroll-smooth py-3"
+          >
+            {products.map((product) => {
+              const key = `${sectionKey}-${product.id}`;
+              return (
+                <div key={key} className="flex-none w-[280px] sm:w-[320px] lg:w-[calc((100%-80px)/5)]">
+                  <ProductCardHome product={product} />
+                </div>
+              );
+            })}
+          </div>
+
+          <button 
+            onClick={() => handleScroll('right')}
+            className="absolute -right-2 md:right-0 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-800 hover:bg-gray-800 hover:text-white hover:border-gray-800 transition-all shadow-md z-10"
+            aria-label="Scroll right"
+          >
+            <ChevronRight size={20} />
+          </button>
         </div>
-
-        <button 
-          onClick={() => handleScroll('right')}
-          className="absolute right-0 md:right-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-800 hover:bg-gray-800 hover:text-white hover:border-gray-800 transition-all shadow-md z-10"
-          aria-label="Scroll right"
-        >
-          <ChevronRight size={20} />
-        </button>
       </div>
     </section>
   );
@@ -130,9 +130,9 @@ const ProductCarousel: React.FC<{
 
 const CategoryShowcase: React.FC = () => {
   return (
-    <section className="py-20 bg-white">
+    <section className="py-14 bg-white">
       <div className="max-w-[1400px] mx-auto px-5">
-        <div className="text-center mb-12">
+        <div className="text-center mb-10">
           <h2 className="text-3xl font-semibold text-gray-800 uppercase tracking-wide">
             SHOP OUR TOP CATEGORIES
           </h2>
@@ -164,7 +164,7 @@ const PromoBanner: React.FC = () => {
   return (
     <section className="bg-black relative overflow-hidden">
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[500px]">
-        <div className="flex flex-col justify-center p-20 text-white z-10">
+        <div className="flex flex-col justify-center p-14 text-white z-10">
           <h2 className="text-5xl font-bold mb-5 uppercase tracking-wider">{banner.title}</h2>
           <p className="text-gray-300 mb-10 max-w-md leading-relaxed">
             {banner.subtitle}
@@ -191,7 +191,7 @@ const PromoBanner: React.FC = () => {
 
 const DealsSection: React.FC = () => {
   return (
-    <section className="py-20 bg-white">
+    <section className="py-14 bg-white">
       <div className="max-w-[1400px] mx-auto px-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="relative overflow-hidden aspect-video group cursor-pointer">
@@ -244,9 +244,9 @@ const InstagramStrip: React.FC = () => {
   ];
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-14 bg-white">
       <div className="max-w-[1400px] mx-auto px-5">
-        <div className="text-center mb-12">
+        <div className="text-center mb-10">
           <h2 className="text-2xl font-semibold text-gray-800 tracking-wide mb-2">
             SAY HELLO TO OUR INSTAGRAM
           </h2>

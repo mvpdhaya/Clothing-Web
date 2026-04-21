@@ -14,7 +14,7 @@ const ProductCardHome: React.FC<Props> = ({ product }) => {
   const slug = product.name.toLowerCase().replace(/ /g, '-');
   
   return (
-    <Link href={`/product/${slug}`} className="group bg-[#f7f7f7] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer block rounded-md overflow-hidden">
+    <Link href={`/product/${slug}`} className="group bg-[#f7f7f7] shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer block rounded-md overflow-hidden">
       <div className="relative bg-gray-100 overflow-hidden aspect-[3/4] rounded-md">
         {product.isNew && (
           <span className="absolute top-4 left-4 bg-red-400 text-white px-3 py-1 text-xs font-semibold z-10">
