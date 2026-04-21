@@ -2,14 +2,15 @@
 
 export const dynamic = 'force-dynamic';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { PRODUCTS } from '@/data/mock';
-import ProductCardCategory from '@/components/store/ProductCardCategory';
+import ProductCardHome from '@/components/store/ProductCardHome';
 import { useCartStore } from '@/store/cartStore';
 import { cn, formatPrice } from '@/lib/utils';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -48,12 +49,24 @@ export default function ProductDetailPage() {
     );
   }
 
-  const related = PRODUCTS.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
-  const accessories = PRODUCTS.filter(p => p.category !== product.category).slice(0, 4);
+  const relatedRef = useRef<HTMLDivElement>(null);
+  const accRef = useRef<HTMLDivElement>(null);
+
+  const related = PRODUCTS.filter(p => p.category === product.category && p.id !== product.id).slice(0, 10);
+  const accessories = PRODUCTS.filter(p => p.category !== product.category).slice(0, 10);
 
   const chgImg = (d: number) => setCurrentImg((p) => (p + d + product.images.length) % product.images.length);
   const updQty = (d: number) => setQty((p) => Math.max(1, p + d));
   const toggleAcc = (id: string) => setOpenAcc((p) => (p === id ? '' : id));
+
+  const handleScroll = (ref: React.RefObject<HTMLDivElement | null>, direction: 'left' | 'right') => {
+    if (ref.current) {
+      const { scrollLeft, clientWidth } = ref.current;
+      const scrollAmount = clientWidth * 0.8;
+      const targetScroll = direction === 'left' ? scrollLeft - scrollAmount : scrollLeft + scrollAmount;
+      ref.current.scrollTo({ left: targetScroll, behavior: 'smooth' });
+    }
+  };
 
   const handleAddToCart = () => {
     if (product.sizes.length > 0 && !selectedSize) {
@@ -231,21 +244,36 @@ export default function ProductDetailPage() {
 
       {/* Related Products */}
       {[
-        { title: 'YOU MAY ALSO LIKE', items: related },
-        { title: 'ACCESSORIES', items: accessories }
+        { title: 'YOU MAY ALSO LIKE', items: related, ref: relatedRef },
+        { title: 'ACCESSORIES', items: accessories, ref: accRef }
       ].map((sec) => (
         <section key={sec.title} className="mb-12">
           <div className="mx-auto max-w-[1400px] px-5">
-            <div className="mb-6 flex items-center justify-between">
+            <div className="mb-6 flex items-center justify-between md:px-[60px]">
               <h2 className="text-xl font-bold uppercase tracking-wider text-[#333]">{sec.title}</h2>
               <div className="flex gap-2">
-                <button className="flex h-[34px] w-[34px] items-center justify-center rounded-full border border-[#ddd] bg-white text-sm text-[#333] transition-all hover:border-[#333] hover:bg-[#333] hover:text-white">❮</button>
-                <button className="flex h-[34px] w-[34px] items-center justify-center rounded-full border border-[#ddd] bg-white text-sm text-[#333] transition-all hover:border-[#333] hover:bg-[#333] hover:text-white">❯</button>
+                <button 
+                  onClick={() => handleScroll(sec.ref, 'left')}
+                  className="flex h-[34px] w-[34px] items-center justify-center rounded-full border border-[#ddd] bg-white text-sm text-[#333] transition-all hover:border-[#333] hover:bg-[#333] hover:text-white"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button 
+                  onClick={() => handleScroll(sec.ref, 'right')}
+                  className="flex h-[34px] w-[34px] items-center justify-center rounded-full border border-[#ddd] bg-white text-sm text-[#333] transition-all hover:border-[#333] hover:bg-[#333] hover:text-white"
+                >
+                  <ChevronRight size={16} />
+                </button>
               </div>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-[18px]">
+            <div 
+              ref={sec.ref}
+              className="flex overflow-x-auto gap-5 no-scrollbar scroll-smooth py-3 md:px-[60px]"
+            >
               {sec.items.map((p) => (
-                <ProductCardCategory key={p.id} product={p} />
+                <div key={`sec-${p.id}`} className="flex-none w-[260px] sm:w-[280px] lg:w-[calc((100%-80px)/5)]">
+                  <ProductCardHome product={p} />
+                </div>
               ))}
             </div>
           </div>
