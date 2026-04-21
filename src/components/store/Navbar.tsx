@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   ShoppingBag,
@@ -9,8 +9,18 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { CATEGORY_NAV } from '@/data/mock';
+import { useCartStore } from '@/store/cartStore';
 
 const Navbar: React.FC = () => {
+  const { cartCount } = useCartStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const totalItems = mounted ? cartCount() : 0;
+
   const navItems = CATEGORY_NAV.map(cat => ({
     label: cat.label.toUpperCase(),
     href: cat.id === 'Flash Sale' ? '/category/Flash Sale' : `/category/${cat.id.toLowerCase()}`,
@@ -77,7 +87,7 @@ const Navbar: React.FC = () => {
           </nav>
 
           <div className="flex items-center gap-5">
-            <Link href="/products" className="text-gray-800 hover:text-red-400 transition-colors">
+            <Link href="/search" className="text-gray-800 hover:text-red-400 transition-colors">
               <Search size={18} />
             </Link>
             <Link href="/profile" className="text-gray-800 hover:text-red-400 transition-colors">
@@ -85,6 +95,11 @@ const Navbar: React.FC = () => {
             </Link>
             <Link href="/cart" className="relative text-gray-800 hover:text-red-400 transition-colors">
               <ShoppingBag size={18} />
+              {totalItems > 0 && (
+                <span className="absolute -top-1.5 -right-2 bg-red-400 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  {totalItems}
+                </span>
+              )}
             </Link>
           </div>
         </div>

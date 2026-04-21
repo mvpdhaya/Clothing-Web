@@ -1,19 +1,18 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cartStore';
 import { PRODUCTS } from '@/data/mock';
-import ProductCardCategory from '@/components/store/ProductCardCategory';
+import ProductCardHome from '@/components/store/ProductCardHome';
 import { formatPrice } from '@/lib/utils';
-import { Truck } from 'lucide-react';
+import { Truck, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const CartPage: React.FC = () => {
   const { cart, removeFromCart, updateCartQuantity, cartTotal } = useCartStore();
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const [instructions, setInstructions] = useState('');
-  const [mounted, setMounted] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = React.useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -22,14 +21,19 @@ const CartPage: React.FC = () => {
   // Recommendation products - using first 8 from mock data
   const recProducts = useMemo(() => PRODUCTS.slice(0, 8), []);
 
-  const cardWidth = 300; // Adjusted for project's ProductCard width + gap
-  const maxScroll = Math.max(0, (recProducts.length - 4) * cardWidth);
-
-  const scrollCarousel = (direction: number) => {
-    setScrollPosition(prev => {
-      const newPos = prev + direction * cardWidth;
-      return Math.max(0, Math.min(newPos, maxScroll));
-    });
+  const handleScroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const { scrollLeft, clientWidth } = scrollRef.current;
+      const scrollAmount = clientWidth * 0.8; 
+      const targetScroll = direction === 'left' 
+        ? scrollLeft - scrollAmount 
+        : scrollLeft + scrollAmount;
+      
+      scrollRef.current.scrollTo({
+        left: targetScroll,
+        behavior: 'smooth'
+      });
+    }
   };
 
   const subtotal = cartTotal();
@@ -47,7 +51,7 @@ const CartPage: React.FC = () => {
 
         {cart.length === 0 ? (
           <div className="py-32 text-center flex flex-col items-center justify-center">
-            <h2 className="text-2xl font-serif italic text-gray-800 mb-2">Your cart is currently empty.</h2>
+            <h2 className="text-2xl font-semibold uppercase tracking-wide text-gray-800 mb-2">Your cart is currently empty.</h2>
             <p className="text-gray-500 text-sm mb-8">Before proceed to checkout you must add some products to your shopping cart.</p>
             <Link 
               href="/products" 
@@ -117,7 +121,6 @@ const CartPage: React.FC = () => {
               ))}
             </div>
 
-
           {/* Order Summary */}
           {cart.length > 0 && (
             <aside className="bg-gray-50 p-7 rounded h-fit">
@@ -128,18 +131,6 @@ const CartPage: React.FC = () => {
                     ? "You've qualified for Free delivery!" 
                     : `Free delivery on all orders over ${formatPrice(shippingFreeThreshold)}`}
                 </span>
-              </div>
-
-              <div className="mb-6">
-                <label className="text-[13px] font-medium mb-2.5 block text-gray-800">
-                  Order Special Instructions
-                </label>
-                <textarea 
-                  value={instructions}
-                  onChange={(e) => setInstructions(e.target.value)}
-                  className="w-full min-h-[80px] border border-gray-200 rounded p-3 text-[13px] resize-y bg-white focus:outline-none focus:border-gray-800 transition-colors"
-                  placeholder="Special requests or instructions..."
-                />
               </div>
 
               <div className="flex justify-between items-center mb-2">
@@ -185,39 +176,29 @@ const CartPage: React.FC = () => {
             </div>
             <div className="flex gap-3">
               <button 
-                onClick={() => scrollCarousel(-1)}
+                onClick={() => handleScroll('left')}
                 className="w-11 h-11 rounded-full bg-white border border-gray-200 cursor-pointer flex items-center justify-center shadow-sm hover:shadow-md hover:bg-gray-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                disabled={scrollPosition === 0}
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-800">
-                  <polyline points="15 18 9 12 15 6"/>
-                </svg>
+                <ChevronLeft size={20} className="text-gray-800" />
               </button>
               <button 
-                onClick={() => scrollCarousel(1)}
+                onClick={() => handleScroll('right')}
                 className="w-11 h-11 rounded-full bg-white border border-gray-200 cursor-pointer flex items-center justify-center shadow-sm hover:shadow-md hover:bg-gray-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                disabled={scrollPosition >= maxScroll}
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-800">
-                  <polyline points="9 18 15 12 9 6"/>
-                </svg>
+                <ChevronRight size={20} className="text-gray-800" />
               </button>
             </div>
           </div>
 
-          <div className="relative overflow-visible">
-            <div className="overflow-hidden mx-[-10px] px-[10px]">
-              <div 
-                className="flex gap-6 transition-transform duration-700 cubic-bezier(0.4, 0, 0.2, 1)"
-                style={{ transform: `translateX(-${scrollPosition}px)` }}
-              >
-                {recProducts.map((product) => (
-                  <div key={product.id} className="min-w-[280px] flex-[0_0_280px]">
-                    <ProductCardCategory product={product} />
-                  </div>
-                ))}
+          <div 
+            ref={scrollRef}
+            className="flex overflow-x-auto gap-5 no-scrollbar scroll-smooth pb-4"
+          >
+            {recProducts.map((product) => (
+              <div key={`rec-${product.id}`} className="flex-none w-[260px] sm:w-[280px] lg:w-[calc((100%-80px)/5)]">
+                <ProductCardHome product={product} />
               </div>
-            </div>
+            ))}
           </div>
         </section>
       </main>

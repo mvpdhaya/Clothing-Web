@@ -84,26 +84,26 @@ export default function CategoryPage() {
                   : 'border border-[#e5e5e5] text-[#1a1a1a] hover:border-[#1a1a1a]'
                   }`}
               >
-                <svg className="h-4 w-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
+                <svg className="h-4 w-4 fill-current transition-colors" viewBox="0 0 24 24">
                   {cols === 2 && (
                     <>
-                      <rect x="3" y="3" width="7" height="18" />
-                      <rect x="14" y="3" width="7" height="18" />
+                      <rect x="5" y="2" width="4" height="20" rx="1" />
+                      <rect x="15" y="2" width="4" height="20" rx="1" />
                     </>
                   )}
                   {cols === 3 && (
                     <>
-                      <rect x="2" y="3" width="5" height="18" />
-                      <rect x="9.5" y="3" width="5" height="18" />
-                      <rect x="17" y="3" width="5" height="18" />
+                      <rect x="3" y="2" width="3" height="20" rx="1" />
+                      <rect x="10.5" y="2" width="3" height="20" rx="1" />
+                      <rect x="18" y="2" width="3" height="20" rx="1" />
                     </>
                   )}
                   {cols === 4 && (
                     <>
-                      <rect x="1" y="3" width="3.5" height="18" />
-                      <rect x="6.5" y="3" width="3.5" height="18" />
-                      <rect x="12" y="3" width="3.5" height="18" />
-                      <rect x="17.5" y="3" width="3.5" height="18" />
+                      <rect x="2" y="2" width="2.5" height="20" rx="1" />
+                      <rect x="8" y="2" width="2.5" height="20" rx="1" />
+                      <rect x="13.5" y="2" width="2.5" height="20" rx="1" />
+                      <rect x="19.5" y="2" width="2.5" height="20" rx="1" />
                     </>
                   )}
                 </svg>
@@ -145,7 +145,7 @@ export default function CategoryPage() {
             })}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-40 border-t border-gray-100 italic font-serif text-3xl text-gray-300">
+          <div className="flex flex-col items-center justify-center py-40 border-t border-gray-100 font-semibold uppercase tracking-widest text-gray-300">
             No products found in this category
           </div>
         )}

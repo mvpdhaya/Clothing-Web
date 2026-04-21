@@ -218,7 +218,7 @@ export default function ProfilePage() {
             {!['orders', 'profile'].includes(tab) && (
               <div className="flex flex-col items-center justify-center py-32 text-center font-sans border border-gray-100 rounded-sm">
                 <Settings strokeWidth={1} className="w-10 h-10 text-gray-300 mb-6" />
-                <p className="font-serif italic text-2xl text-gray-400 mb-2">Coming Soon</p>
+                <p className="font-semibold uppercase tracking-widest text-lg text-gray-400 mb-2">Coming Soon</p>
                 <p className="text-[11px] uppercase tracking-widest text-gray-400 font-bold">This section is under construction</p>
               </div>
             )}

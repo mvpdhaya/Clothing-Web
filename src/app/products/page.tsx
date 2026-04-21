@@ -73,9 +73,9 @@ function ProductsContent() {
     <div className="bg-white min-h-screen font-sans text-[#1a1a1a]">
       {/* Hero */}
       <section
-        className="relative flex flex-col items-center justify-center overflow-hidden bg-cover bg-center px-5 py-24 text-center lg:px-10"
+        className="relative flex flex-col items-center justify-center overflow-hidden bg-cover bg-center px-5 py-20 text-center lg:px-10"
         style={{
-          backgroundImage: `linear-gradient(135deg, rgba(30,58,95,0.85) 0%, rgba(15,40,71,0.9) 50%, rgba(26,58,82,0.85) 100%), url("https://images.unsplash.com/photo-1441984908747-523199859266?w=1600&h=400&fit=crop")`,
+          backgroundImage: `linear-gradient(135deg, rgba(30,58,95,0.85) 0%, rgba(15,40,71,0.9) 50%, rgba(26,58,82,0.85) 100%), url("https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=1600&h=400&fit=crop")`,
         }}
       >
         <div
@@ -94,7 +94,7 @@ function ProductsContent() {
           <span className="font-semibold text-white">{subcategory || category || 'Collections'}</span>
         </div>
 
-        <h1 className="relative z-10 text-[32px] font-bold uppercase tracking-[0.2em] text-white drop-shadow-lg lg:text-[48px] italic">
+        <h1 className="relative z-10 text-[28px] font-bold uppercase tracking-widest text-white drop-shadow-md lg:text-[42px]">
           {subcategory || category || 'Our Collections'}
         </h1>
       </section>
@@ -186,7 +186,7 @@ function ProductsContent() {
             })}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-60 border-t border-gray-100 italic font-serif text-4xl text-gray-200">
+          <div className="flex flex-col items-center justify-center py-60 border-t border-gray-100 font-semibold uppercase tracking-widest text-gray-200">
             No items match your criteria
           </div>
         )}

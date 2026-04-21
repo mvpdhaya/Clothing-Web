@@ -18,33 +18,35 @@ import {
 } from '@/data/mock';
 
 const Hero: React.FC = () => {
-  const banner = BANNERS[1]; // New Season Arrivals
+  const bannerText = BANNERS[1]; // New Season Arrivals
+  const bannerImage = BANNERS[0].image; // Flash Sale Image
   return (
-    <section className="bg-gray-100 py-20">
-      <div className="max-w-[1400px] mx-auto px-5">
-        <div className="flex flex-col md:flex-row items-center gap-16">
-          <div className="flex-1">
-            <img
-              src="https://images.unsplash.com/photo-1516826957135-7dedea22a4ae?w=600&h=700&fit=crop"
-              alt="Male Fashion Model"
-              className="w-full max-w-[500px] h-auto object-cover"
-            />
-          </div>
-          <div className="flex-1 text-center">
-            <p className="flex items-center justify-center gap-4 text-gray-500 tracking-widest mb-3">
-              <span className="w-10 h-px bg-gray-800"></span>
-              Stylish
-              <span className="w-10 h-px bg-gray-800"></span>
-            </p>
-            <h1 className="text-5xl font-semibold text-gray-800 mb-4">{banner.title}</h1>
-            <p className="text-gray-500 mb-8">{banner.subtitle}</p>
-            <Link
-              href={banner.link}
-              className="inline-block px-9 py-3 border-2 border-gray-800 text-gray-800 font-medium hover:bg-gray-800 hover:text-white transition-all underline-none"
-            >
-              {banner.cta}
-            </Link>
-          </div>
+    <section 
+      className="relative w-full flex items-center bg-cover bg-center overflow-hidden"
+      style={{ 
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url(${bannerImage})` 
+      }}
+    >
+      <div className="max-w-[1400px] mx-auto px-5 w-full h-full flex flex-col md:flex-row items-center justify-center md:justify-end py-20">
+        {/* Spacer to keep text on the right side - mirroring original position */}
+        <div className="hidden md:block flex-1" />
+        
+        <div className="flex-1 text-center z-10 bg-black/10 backdrop-blur-[2px] p-10 rounded-sm border border-white/10">
+          <p className="flex items-center justify-center gap-4 text-white tracking-widest mb-3 font-medium">
+            <span className="w-10 h-px bg-white"></span>
+            Stylish
+            <span className="w-10 h-px bg-white"></span>
+          </p>
+          <h1 className="text-5xl font-bold text-white mb-4 leading-tight uppercase tracking-tight">{bannerText.title}</h1>
+          <p className="text-white/90 text-lg mb-10 max-w-md mx-auto font-medium">
+            {bannerText.subtitle}
+          </p>
+          <Link
+            href={bannerText.link}
+            className="inline-block px-12 py-4 bg-[#1a1a1a] text-white text-sm font-semibold tracking-widest uppercase hover:bg-[#333] transition-all transform hover:scale-105 shadow-xl"
+          >
+            {bannerText.cta}
+          </Link>
         </div>
       </div>
     </section>
@@ -75,7 +77,7 @@ const ProductCarousel: React.FC<{
   };
 
   return (
-    <section className="py-20 bg-gray-50 overflow-hidden">
+    <section className="py-20 bg-white overflow-hidden">
       <div className="max-w-[1400px] mx-auto px-5">
         <div className="flex items-center justify-between mb-12 px-2 md:px-[60px]">
           <div>
