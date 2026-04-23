@@ -142,7 +142,7 @@ export default function ProductDetailPage() {
             {product.oldPrice && (
               <div className="mb-2 text-lg text-[#94a3b8] line-through">{formatPrice(product.oldPrice)}</div>
             )}
-            <div className="mb-5 text-sm text-[#666]">or pay in 3 x {formatPrice(product.price / 3)} with <a href="#" className="font-medium text-[#333] underline">KOKO</a></div>
+
 
             <div className="mb-5 inline-flex cursor-pointer items-center gap-2 border-b border-transparent text-sm text-[#666] transition-colors hover:border-[#666]">📏 Size Chart</div>
 
@@ -206,7 +206,7 @@ export default function ProductDetailPage() {
             <div className="mb-5 flex flex-col gap-3">
               <div className="flex items-center gap-3 text-sm text-[#555]"><span className="text-lg text-[#25d366]">💬</span> Ask an Expert</div>
               <div className="flex items-center gap-3 text-sm text-[#555]"><span className="text-lg text-blue-500">🌐</span> Unmatched Value For Money</div>
-              <div className="flex items-center gap-3 text-sm text-[#555]"><span className="text-lg -rotate-45 text-orange-500">🏷️</span> Buy now, Pay later With KOKO</div>
+
               <div className="flex items-center gap-3 text-sm text-[#555]"><span className="text-lg text-gray-500">🔄</span> 14-days Easy Exchange</div>
             </div>
 

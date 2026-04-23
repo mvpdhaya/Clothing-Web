@@ -23,7 +23,7 @@ export default function OrderDetailPage() {
           <nav className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-[var(--color-text-muted)] mb-3">
             <Link href="/" className="hover:text-[var(--color-text-primary)] transition-colors">Home</Link>
             <ChevronRight className="w-3 h-3 opacity-40" />
-            <Link href="/orders" className="hover:text-[var(--color-text-primary)] transition-colors">Orders</Link>
+            <Link href="/profile" className="hover:text-[var(--color-text-primary)] transition-colors">Profile</Link>
             <ChevronRight className="w-3 h-3 opacity-40" />
             <span className="text-[var(--color-text-primary)] font-bold">{order.id}</span>
           </nav>
@@ -32,22 +32,14 @@ export default function OrderDetailPage() {
               <h1 className="font-display text-4xl font-bold text-[var(--color-text-primary)]">Order {order.id}</h1>
               <p className="text-[var(--color-text-muted)] text-sm mt-1">Placed on {order.date}</p>
             </div>
-            <span className={cn(
-              'badge text-sm px-4 py-2',
-              order.status === 'Shipped' ? 'badge-shipped' : 'badge-delivered'
-            )}>
-              {order.status === 'Shipped'
-                ? <><Truck className="w-3 h-3 mr-1.5" />{order.status}</>
-                : <><PackageCheck className="w-3 h-3 mr-1.5" />{order.status}</>
-              }
-            </span>
+
           </div>
         </div>
       </div>
 
       <div className="container py-10">
-        <Link href="/orders" className="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] hover:text-brand-black transition-colors mb-8">
-          <ChevronLeft className="w-4 h-4" /> Back to Orders
+        <Link href="/profile" className="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] hover:text-brand-black transition-colors mb-8">
+          <ChevronLeft className="w-4 h-4" /> Back to Profile
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -80,35 +72,7 @@ export default function OrderDetailPage() {
               </div>
             </div>
 
-            {/* Delivery Tracking */}
-            <div className="bg-white border border-[var(--color-border)] rounded-[var(--radius-lg)] p-6">
-              <h2 className="font-semibold text-[var(--color-text-primary)] mb-5">Tracking</h2>
-              <div className="space-y-4">
-                {[
-                  { label: 'Order Placed', date: order.date, done: true },
-                  { label: 'Processing', date: 'Within 24 hours', done: true },
-                  { label: 'Shipped', date: order.status !== 'Delivered' ? 'In transit' : 'Delivered', done: order.status === 'Delivered' || order.status === 'Shipped' },
-                  { label: 'Delivered', date: order.status === 'Delivered' ? order.date : 'Estimated 3–5 days', done: order.status === 'Delivered' },
-                ].map((step, i) => (
-                  <div key={i} className="flex items-start gap-4">
-                    <div className={cn(
-                      'w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-[11px] font-bold border-2',
-                      step.done
-                        ? 'bg-brand-black border-brand-black text-white'
-                        : 'border-[var(--color-border)] text-[var(--color-text-muted)]'
-                    )}>
-                      {i + 1}
-                    </div>
-                    <div className="pt-1">
-                      <p className={cn('text-sm font-semibold', step.done ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)]')}>
-                        {step.label}
-                      </p>
-                      <p className="text-[11px] text-[var(--color-text-muted)]">{step.date}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+
           </div>
 
           {/* Right — Summary + Address */}
@@ -161,6 +125,14 @@ export default function OrderDetailPage() {
               Shop Again
             </Link>
           </div>
+        </div>
+      </div>
+      {/* ── FOOTER LINKS ── */}
+      <div className="bg-white border-t border-[var(--color-border)] mt-10">
+        <div className="container py-8 flex gap-6">
+          <Link href="/returns"  className="text-[13px] text-black underline underline-offset-[3px] hover:opacity-70 transition-opacity">Refund policy</Link>
+          <Link href="/privacy"  className="text-[13px] text-black underline underline-offset-[3px] hover:opacity-70 transition-opacity">Privacy policy</Link>
+          <Link href="/terms"    className="text-[13px] text-black underline underline-offset-[3px] hover:opacity-70 transition-opacity">Terms of service</Link>
         </div>
       </div>
     </div>

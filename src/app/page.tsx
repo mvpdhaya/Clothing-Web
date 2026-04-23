@@ -43,7 +43,7 @@ const Hero: React.FC = () => {
           </p>
           <Link
             href={bannerText.link}
-            className="inline-block px-12 py-4 bg-[#1a1a1a] text-white text-sm font-semibold tracking-widest uppercase hover:bg-[#333] transition-all transform hover:scale-105 shadow-xl"
+            className="inline-block px-12 py-4 border-2 border-white text-white text-sm font-semibold tracking-widest uppercase hover:bg-white hover:text-black transition-all transform hover:scale-105 shadow-xl"
           >
             {bannerText.cta}
           </Link>

@@ -175,7 +175,7 @@ function ProductsContent() {
           >
             {products.map((product) => {
               const slug = product.name.toLowerCase().replace(/ /g, '-');
-              const installment = formatPrice(product.price / 3);
+
 
               return (
                 <ProductCardCategory

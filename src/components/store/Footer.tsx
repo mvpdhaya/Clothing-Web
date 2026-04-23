@@ -13,8 +13,16 @@ import {
   Play,
 } from 'lucide-react';
 
+import { usePathname } from 'next/navigation';
+
 const Footer: React.FC = () => {
+  const pathname = usePathname();
   const socialIcons = [Globe, MessageCircle, Camera, Play];
+
+  // Hide footer on profile, order, and auth pages
+  if (pathname === '/profile' || pathname.startsWith('/orders') || pathname === '/login' || pathname === '/register') {
+    return null;
+  }
 
   return (
     <footer className="bg-gray-100 pt-16 pb-8 border-t border-gray-200 font-sans">
@@ -52,7 +60,6 @@ const Footer: React.FC = () => {
                 { label: 'About us', href: '/about' },
                 { label: 'Store location', href: '/contact' },
                 { label: 'Contact', href: '/contact' },
-                { label: 'Orders tracking', href: '/orders' },
                 { label: 'Careers', href: '#' }
               ].map((item) => (
                 <li key={item.label}>
