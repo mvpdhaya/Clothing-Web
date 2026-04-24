@@ -28,7 +28,7 @@ const Navbar: React.FC = () => {
   const totalItems = mounted ? cartCount() : 0;
 
   // Hide Navbar on auth pages
-  if (pathname === '/login' || pathname === '/register') {
+  if (pathname === '/login' || pathname === '/register' || pathname === '/forgot-password' || pathname === '/update-password') {
     return null;
   }
 

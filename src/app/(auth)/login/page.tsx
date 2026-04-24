@@ -43,9 +43,9 @@ export default function LoginPage() {
                 <label className="text-[12px] font-bold text-gray-400 uppercase tracking-widest">
                   Password
                 </label>
-                <button type="button" className="text-[12px] font-bold text-red-400 hover:text-red-500 transition-colors">
+                <Link href="/forgot-password" className="text-[12px] font-bold text-red-400 hover:text-red-500 transition-colors">
                   Forgot?
-                </button>
+                </Link>
               </div>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-red-400 transition-colors" />

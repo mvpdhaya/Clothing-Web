@@ -7,7 +7,6 @@ import {
   Phone,
   Mail,
   CreditCard,
-  Camera,
   Globe,
   MessageCircle,
   Play,
@@ -18,10 +17,10 @@ import { CATEGORY_NAV } from '@/data/mock';
 
 const Footer: React.FC = () => {
   const pathname = usePathname();
-  const socialIcons = [Globe, MessageCircle, Camera, Play];
+  const socialIcons = [Globe, MessageCircle, Play];
 
   // Hide footer on profile, order, and auth pages
-  if (pathname === '/profile' || pathname.startsWith('/orders') || pathname === '/login' || pathname === '/register') {
+  if (pathname === '/profile' || pathname.startsWith('/orders') || pathname === '/login' || pathname === '/register' || pathname === '/forgot-password' || pathname === '/update-password') {
     return null;
   }
 
@@ -43,15 +42,22 @@ const Footer: React.FC = () => {
               Premium men's fashion for the modern gentleman.
             </p>
             <div className="flex gap-4">
-              {socialIcons.map((Icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-800 hover:bg-gray-800 hover:text-white hover:border-gray-800 transition-all font-sans"
-                >
-                  <Icon size={16} />
-                </a>
-              ))}
+              {/* Globe */}
+              <a href="#" className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-800 hover:bg-gray-800 hover:text-white hover:border-gray-800 transition-all font-sans">
+                <Globe size={16} />
+              </a>
+              {/* Message */}
+              <a href="#" className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-800 hover:bg-gray-800 hover:text-white hover:border-gray-800 transition-all font-sans">
+                <MessageCircle size={16} />
+              </a>
+              {/* Instagram - custom SVG */}
+              <a href="#" className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-800 hover:bg-gray-800 hover:border-gray-800 transition-all font-sans group">
+                <img src="/insta.svg" alt="Instagram" className="w-4 h-4 invert group-hover:invert-0" />
+              </a>
+              {/* Play */}
+              <a href="#" className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-800 hover:bg-gray-800 hover:text-white hover:border-gray-800 transition-all font-sans">
+                <Play size={16} />
+              </a>
             </div>
           </div>
 
