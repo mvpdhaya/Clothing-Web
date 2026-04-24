@@ -45,7 +45,7 @@ const Navbar: React.FC = () => {
   return (
     <>
       {/* Top Bar (Scrolls away) */}
-      <div className="overflow-hidden whitespace-nowrap bg-[#0a1628] py-2.5 text-center text-[11px] font-semibold tracking-wide text-white w-full">
+      <div className="overflow-hidden whitespace-nowrap bg-[#0a1628] py-1.5 text-center text-[11px] font-semibold tracking-wide text-white w-full">
         <div className="inline-block animate-[scroll_25s_linear_infinite]">
           {[...Array(6)].map((_, i) => (
             <span key={i} className="inline-block px-10">FREE DELIVERY ON ORDERS ABOVE LKR 13,000/-</span>

@@ -130,7 +130,7 @@ export default function OrderDetailPage() {
       {/* ── FOOTER LINKS ── */}
       <div className="bg-white border-t border-[var(--color-border)] mt-10">
         <div className="container py-8 flex gap-6">
-          <Link href="/returns"  className="text-[13px] text-black underline underline-offset-[3px] hover:opacity-70 transition-opacity">Refund policy</Link>
+
           <Link href="/privacy"  className="text-[13px] text-black underline underline-offset-[3px] hover:opacity-70 transition-opacity">Privacy policy</Link>
           <Link href="/terms"    className="text-[13px] text-black underline underline-offset-[3px] hover:opacity-70 transition-opacity">Terms of service</Link>
         </div>
