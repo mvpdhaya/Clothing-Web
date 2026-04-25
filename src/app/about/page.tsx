@@ -13,12 +13,12 @@ export default function AboutPage() {
             <ChevronRight className="w-3 h-3" />
             <span className="text-gray-800 font-bold">About Us</span>
           </nav>
-          <h1 className="text-4xl font-bold uppercase tracking-widest text-gray-800">About Us</h1>
+          <h1 className="text-2xl sm:text-4xl font-bold uppercase tracking-widest text-gray-800">About Us</h1>
         </div>
       </div>
 
       <div className="max-w-[1000px] mx-auto px-5 py-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center mb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center mb-16 md:mb-20">
           <div>
             <img 
               src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80" 
@@ -37,7 +37,7 @@ export default function AboutPage() {
           </div>
         </div>
 
-        <div className="text-center bg-gray-50 p-12 rounded-2xl mb-20">
+        <div className="text-center bg-gray-50 p-8 sm:p-12 rounded-2xl mb-16 md:mb-20">
           <h2 className="text-3xl font-bold mb-6 uppercase tracking-wider">Our Mission</h2>
           <p className="text-gray-600 leading-relaxed max-w-2xl mx-auto italic border-l-4 border-red-400 pl-6 text-xl">
             "To empower individuals through fashion that inspires confidence and reflects their true selves, while maintaining an unwavering commitment to quality and ethical craftsmanship."

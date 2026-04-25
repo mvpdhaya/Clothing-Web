@@ -13,12 +13,12 @@ export default function ContactPage() {
             <ChevronRight className="w-3 h-3" />
             <span className="text-gray-800 font-bold">Contact</span>
           </nav>
-          <h1 className="text-4xl font-bold uppercase tracking-widest text-gray-800">Contact Us</h1>
+          <h1 className="text-2xl sm:text-4xl font-bold uppercase tracking-widest text-gray-800">Contact Us</h1>
         </div>
       </div>
 
       <div className="max-w-[1400px] mx-auto px-5 py-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20">
           <div>
             <h2 className="text-2xl font-bold mb-8 uppercase tracking-widest">Get in Touch</h2>
             <form className="space-y-6">
@@ -40,7 +40,7 @@ export default function ContactPage() {
                 <label className="text-[11px] uppercase tracking-widest font-bold text-gray-500 mb-2 block">Message</label>
                 <textarea rows={6} className="w-full border border-gray-200 px-4 py-3 text-sm focus:border-red-400 outline-none transition-colors resize-none" placeholder="How can we help?"></textarea>
               </div>
-              <button className="bg-gray-800 text-white px-10 py-4 text-xs font-bold uppercase tracking-[0.2em] hover:bg-red-400 transition-colors">
+              <button className="w-full sm:w-auto bg-gray-800 text-white px-10 py-4 text-xs font-bold uppercase tracking-[0.2em] hover:bg-red-400 transition-colors">
                 Send Message
               </button>
             </form>

@@ -45,7 +45,7 @@ const CartPage: React.FC = () => {
   return (
     <div className="font-sans text-gray-800 bg-white leading-normal pt-10">
       <main className="max-w-[1280px] mx-auto p-10 max-lg:p-5">
-        <h1 className="text-4xl font-semibold tracking-wide mb-10 uppercase text-gray-800">
+        <h1 className="text-2xl sm:text-4xl font-semibold tracking-wide mb-8 sm:mb-10 uppercase text-gray-800">
           Your Cart
         </h1>
 
@@ -165,7 +165,7 @@ const CartPage: React.FC = () => {
 
         {/* Recommendations */}
         <section className="mt-24 pb-16">
-          <div className="flex justify-between items-end mb-10">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-10">
             <div>
               <p className="text-xs font-bold tracking-[2px] uppercase text-gray-500 mb-3">
                 Recommend
@@ -195,7 +195,7 @@ const CartPage: React.FC = () => {
             className="flex overflow-x-auto gap-5 no-scrollbar scroll-smooth pb-4"
           >
             {recProducts.map((product) => (
-              <div key={`rec-${product.id}`} className="flex-none w-[260px] sm:w-[280px] lg:w-[calc((100%-80px)/5)]">
+              <div key={`rec-${product.id}`} className="flex-none w-[calc(50%-10px)] sm:w-[280px] lg:w-[calc((100%-80px)/5)]">
                 <ProductCardHome product={product} />
               </div>
             ))}

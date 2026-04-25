@@ -37,7 +37,7 @@ const Hero: React.FC = () => {
             Stylish
             <span className="w-10 h-px bg-white"></span>
           </p>
-          <h1 className="text-5xl font-bold text-white mb-4 leading-tight uppercase tracking-tight">{bannerText.title}</h1>
+          <h1 className="text-3xl sm:text-5xl font-bold text-white mb-4 leading-tight uppercase tracking-tight">{bannerText.title}</h1>
           <p className="text-white/90 text-lg mb-10 max-w-md mx-auto font-medium">
             {bannerText.subtitle}
           </p>
@@ -79,9 +79,9 @@ const ProductCarousel: React.FC<{
   return (
     <section className="py-14 bg-white">
       <div className="max-w-[1400px] mx-auto px-5">
-        <div className="flex items-center justify-between mb-10 md:px-[60px]">
+        <div className="flex items-center justify-between mb-6 sm:mb-10 md:px-[60px]">
           <div>
-            <h2 className="text-3xl font-semibold text-gray-800 uppercase tracking-wide">{title}</h2>
+            <h2 className="text-xl sm:text-3xl font-semibold text-gray-800 uppercase tracking-wide">{title}</h2>
             <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
           </div>
           <Link
@@ -108,7 +108,7 @@ const ProductCarousel: React.FC<{
             {products.map((product) => {
               const key = `${sectionKey}-${product.id}`;
               return (
-                <div key={key} className="flex-none w-[280px] sm:w-[320px] lg:w-[calc((100%-80px)/5)]">
+                <div key={key} className="flex-none w-[calc(50%-10px)] sm:w-[320px] lg:w-[calc((100%-80px)/5)]">
                   <ProductCardHome product={product} />
                 </div>
               );
@@ -138,7 +138,7 @@ const CategoryShowcase: React.FC = () => {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-1">
           {CATEGORY_NAV.map((category) => (
             <Link key={category.id} href={`/category/${category.id.toLowerCase()}`} className="relative overflow-hidden aspect-[3/4] cursor-pointer group block">
               <img
@@ -163,26 +163,26 @@ const PromoBanner: React.FC = () => {
   const banner = BANNERS[0]; // Flash Sale
   return (
     <section className="bg-black relative overflow-hidden">
-      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[500px]">
-        <div className="flex flex-col justify-center p-14 text-white z-10">
-          <h2 className="text-5xl font-bold mb-5 uppercase tracking-wider">{banner.title}</h2>
-          <p className="text-gray-300 mb-10 max-w-md leading-relaxed">
+      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[400px] lg:min-h-[500px]">
+        <div className="flex flex-col justify-center p-8 sm:p-14 text-white z-10 order-2 lg:order-1">
+          <h2 className="text-3xl sm:text-5xl font-bold mb-4 sm:mb-5 uppercase tracking-wider">{banner.title}</h2>
+          <p className="text-gray-300 mb-8 sm:mb-10 max-w-md leading-relaxed text-sm sm:text-base">
             {banner.subtitle}
           </p>
           <Link
             href={banner.link}
-            className="inline-block px-12 py-4 border-2 border-white text-white font-semibold uppercase tracking-widest hover:bg-white hover:text-black transition-all w-fit"
+            className="inline-block px-8 py-3 sm:px-12 sm:py-4 border-2 border-white text-white font-semibold uppercase tracking-widest hover:bg-white hover:text-black transition-all w-fit text-xs sm:text-base"
           >
             {banner.cta}
           </Link>
         </div>
-        <div className="relative overflow-hidden">
+        <div className="relative overflow-hidden h-[300px] lg:h-auto order-1 lg:order-2">
           <img
             src={banner.image}
             alt={banner.title}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-black via-black/40 to-transparent"></div>
         </div>
       </div>
     </section>
@@ -255,7 +255,7 @@ const InstagramStrip: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {instagramPosts.map((post) => (
             <div key={post.id} className="relative overflow-hidden aspect-[3/4] rounded-2xl cursor-pointer group">
               <img
@@ -263,7 +263,7 @@ const InstagramStrip: React.FC = () => {
                 alt="Instagram"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute inset-0 bg-black/30 lg:bg-black/40 flex items-center justify-center opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
                 <img src="/insta.svg" alt="Instagram Icon" className="w-8 h-8" />
               </div>
             </div>

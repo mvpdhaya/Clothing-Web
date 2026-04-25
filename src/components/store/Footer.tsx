@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import {
   MapPin,
@@ -17,7 +17,12 @@ import { CATEGORY_NAV } from '@/data/mock';
 
 const Footer: React.FC = () => {
   const pathname = usePathname();
+  const [openSection, setOpenSection] = useState<string | null>(null);
   const socialIcons = [Globe, MessageCircle, Play];
+
+  const toggleSection = (section: string) => {
+    setOpenSection(openSection === section ? null : section);
+  };
 
   // Hide footer on profile, order, and auth pages
   if (pathname === '/profile' || pathname.startsWith('/orders') || pathname === '/login' || pathname === '/register' || pathname === '/forgot-password' || pathname === '/update-password') {
@@ -25,11 +30,11 @@ const Footer: React.FC = () => {
   }
 
   return (
-    <footer className="bg-gray-100 pt-16 pb-8 border-t border-gray-200 font-sans">
+    <footer className="bg-gray-100 pt-10 sm:pt-16 pb-6 sm:pb-8 border-t border-gray-200 font-sans">
       <div className="max-w-[1400px] mx-auto px-5">
         <div className="flex flex-col lg:flex-row justify-between gap-10 mb-10 w-full">
           {/* LEFT SIDE */}
-          <div className="lg:max-w-sm">
+          <div className="lg:max-w-sm mb-6 sm:mb-0">
             <Link href="/" className="text-2xl font-bold text-gray-800 mb-4 block">
               Flone<span className="text-red-400">.</span>
             </Link>
@@ -41,7 +46,7 @@ const Footer: React.FC = () => {
               <br />
               Premium men's fashion for the modern gentleman.
             </p>
-            <div className="flex gap-4">
+            <div className="flex gap-3 sm:gap-4">
               {/* Globe */}
               <a href="#" className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-800 hover:bg-gray-800 hover:text-white hover:border-gray-800 transition-all font-sans">
                 <Globe size={16} />
@@ -62,10 +67,16 @@ const Footer: React.FC = () => {
           </div>
 
           {/* RIGHT SIDE */}
-          <div className="flex flex-col sm:flex-row gap-10 lg:gap-20">
-            <div>
-              <h4 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-5">ABOUT US</h4>
-              <ul className="space-y-2 list-none p-0">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-10 lg:gap-20 w-full lg:w-auto">
+            <div className="border-b border-gray-200 sm:border-none pb-4 sm:pb-0">
+              <h4 
+                className="flex items-center justify-between text-sm font-semibold text-gray-800 uppercase tracking-wide mb-0 sm:mb-5 cursor-pointer sm:cursor-default"
+                onClick={() => toggleSection('about')}
+              >
+                ABOUT US
+                <span className="sm:hidden text-lg leading-none">{openSection === 'about' ? '−' : '+'}</span>
+              </h4>
+              <ul className={`space-y-2 list-none p-0 mt-4 sm:mt-0 ${openSection === 'about' ? 'block' : 'hidden'} sm:!block`}>
                 {[
                   { label: 'About us', href: '/about' },
                   { label: 'Store location', href: '/contact' },
@@ -81,9 +92,15 @@ const Footer: React.FC = () => {
               </ul>
             </div>
 
-            <div>
-              <h4 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-5">SHOP</h4>
-              <ul className="space-y-2 list-none p-0">
+            <div className="border-b border-gray-200 sm:border-none pb-4 sm:pb-0">
+              <h4 
+                className="flex items-center justify-between text-sm font-semibold text-gray-800 uppercase tracking-wide mb-0 sm:mb-5 cursor-pointer sm:cursor-default"
+                onClick={() => toggleSection('shop')}
+              >
+                SHOP
+                <span className="sm:hidden text-lg leading-none">{openSection === 'shop' ? '−' : '+'}</span>
+              </h4>
+              <ul className={`space-y-2 list-none p-0 mt-4 sm:mt-0 ${openSection === 'shop' ? 'block' : 'hidden'} sm:!block`}>
                 {CATEGORY_NAV.map((category) => (
                   <li key={category.id}>
                     <Link href={`/category/${category.id.toLowerCase()}`} className="text-sm text-gray-500 hover:text-red-400 transition-colors uppercase tracking-wider">
@@ -94,7 +111,7 @@ const Footer: React.FC = () => {
               </ul>
             </div>
 
-            <div>
+            <div className="pt-2 sm:pt-0">
               <h4 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-5">CONTACT US</h4>
               <ul className="space-y-3 list-none p-0">
                 <li className="flex items-center gap-3 text-sm text-gray-500">

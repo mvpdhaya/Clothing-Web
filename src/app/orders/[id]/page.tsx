@@ -27,9 +27,9 @@ export default function OrderDetailPage() {
             <ChevronRight className="w-3 h-3 opacity-40" />
             <span className="text-[var(--color-text-primary)] font-bold">{order.id}</span>
           </nav>
-          <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-start sm:items-center justify-between gap-3 sm:gap-4">
             <div>
-              <h1 className="font-display text-4xl font-bold text-[var(--color-text-primary)]">Order {order.id}</h1>
+              <h1 className="font-display text-2xl sm:text-4xl font-bold text-[var(--color-text-primary)]">Order {order.id}</h1>
               <p className="text-[var(--color-text-muted)] text-sm mt-1">Placed on {order.date}</p>
             </div>
 
@@ -51,7 +51,7 @@ export default function OrderDetailPage() {
               </div>
               <div className="divide-y divide-[var(--color-border)]">
                 {orderProducts.map((p) => p && (
-                  <div key={p.id} className="flex gap-5 p-6">
+                  <div key={p.id} className="flex gap-4 p-4 sm:p-6">
                     <Link
                       href={`/product/${p.name.toLowerCase().replace(/ /g, '-')}`}
                       className="relative w-20 h-28 flex-shrink-0 rounded-[var(--radius-sm)] overflow-hidden bg-[var(--color-surface-raised)]"

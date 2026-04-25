@@ -137,7 +137,7 @@ export default function ProductDetailPage() {
 
           {/* Info */}
           <div className="lg:sticky lg:top-[90px] h-fit lg:pr-2.5">
-            <h1 className="mb-3 text-[32px] font-bold uppercase tracking-wider text-[#333]">{product.name}</h1>
+            <h1 className="mb-3 text-[22px] sm:text-[32px] font-bold uppercase tracking-wider text-[#333]">{product.name}</h1>
             <div className="mb-2 text-2xl font-semibold text-[#333]">{formatPrice(product.price)}</div>
             {product.oldPrice && (
               <div className="mb-2 text-lg text-[#94a3b8] line-through">{formatPrice(product.oldPrice)}</div>
@@ -149,7 +149,7 @@ export default function ProductDetailPage() {
             {product.colors.length > 0 && (
               <>
                 <div className="mb-2 text-sm text-[#666]">Color : {selectedColor}</div>
-                <div className="mb-5 flex gap-2.5">
+                <div className="mb-5 flex flex-wrap gap-2.5">
                   {product.colors.map((c) => (
                     <button 
                       key={c.name} 
@@ -168,7 +168,7 @@ export default function ProductDetailPage() {
                 <div className={cn("mb-2 text-sm", sizeError ? "text-red-500 font-bold" : "text-[#666]")}>
                   Size : {selectedSize || (sizeError ? "Please Select" : "")}
                 </div>
-                <div className="mb-6 flex gap-2.5">
+                <div className="mb-6 flex flex-wrap gap-2.5">
                   {product.sizes.map((s) => (
                     <button 
                       key={s} 
@@ -182,7 +182,7 @@ export default function ProductDetailPage() {
               </>
             )}
 
-            <div className="mb-3 flex gap-3">
+            <div className="mb-3 flex flex-wrap gap-3">
               <div className="flex h-[52px] items-center border border-[#ddd]">
                 <button onClick={() => updQty(-1)} className="flex h-full w-11 items-center justify-center bg-white text-lg text-[#333] transition-colors hover:bg-[#f5f5f5]">−</button>
                 <input type="text" value={qty} readOnly className="h-full w-12 border-none text-center text-base font-medium outline-none" />
@@ -271,7 +271,7 @@ export default function ProductDetailPage() {
               className="flex overflow-x-auto gap-5 no-scrollbar scroll-smooth py-3 md:px-[60px]"
             >
               {sec.items.map((p) => (
-                <div key={`sec-${p.id}`} className="flex-none w-[260px] sm:w-[280px] lg:w-[calc((100%-80px)/5)]">
+                <div key={`sec-${p.id}`} className="flex-none w-[calc(50%-10px)] sm:w-[280px] lg:w-[calc((100%-80px)/5)]">
                   <ProductCardHome product={p} />
                 </div>
               ))}

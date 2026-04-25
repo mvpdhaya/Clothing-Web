@@ -134,7 +134,7 @@ export default function ProfilePage() {
           onClick={() => setShowEditProfile(false)}
         >
           <div
-            className="bg-white rounded-xl shadow-2xl w-full max-w-[540px] max-h-[90vh] overflow-y-auto p-8"
+            className="bg-white rounded-xl shadow-2xl w-full max-w-[540px] max-h-[90vh] overflow-y-auto p-6 sm:p-8 mx-4"
             onClick={e => e.stopPropagation()}
           >
             <h2 className="text-[22px] font-semibold mb-6">Edit profile</h2>
@@ -207,7 +207,7 @@ export default function ProfilePage() {
           onClick={() => setShowAddAddress(false)}
         >
           <div
-            className="bg-white rounded-xl shadow-2xl w-full max-w-[540px] max-h-[90vh] overflow-y-auto p-8"
+            className="bg-white rounded-xl shadow-2xl w-full max-w-[540px] max-h-[90vh] overflow-y-auto p-6 sm:p-8 mx-4"
             onClick={e => e.stopPropagation()}
           >
             <h2 className="text-[22px] font-semibold mb-6">{editingAddress ? 'Edit address' : 'Add address'}</h2>
@@ -327,7 +327,7 @@ export default function ProfilePage() {
 
 
         {/* ── MAIN ── */}
-        <div className="max-w-[1100px] mx-auto px-20 pt-12 pb-20">
+        <div className="max-w-[1100px] mx-auto px-5 sm:px-10 md:px-20 pt-12 pb-20">
 
           {/* ── PROFILE TAB ── */}
           {activeTab === 'profile' && (
@@ -438,8 +438,8 @@ export default function ProfilePage() {
                   {ORDERS.map(order => (
                     <div key={order.id} className="border border-[#eee] rounded-xl overflow-hidden hover:shadow-md transition-shadow">
                       {/* header row */}
-                      <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4 bg-[#fafafa] border-b border-[#eee]">
-                        <div className="flex flex-wrap gap-8 text-[12px]">
+                      <div className="flex flex-wrap items-start sm:items-center justify-between gap-4 px-4 sm:px-6 py-4 bg-[#fafafa] border-b border-[#eee]">
+                        <div className="flex flex-wrap gap-4 sm:gap-8 text-[12px]">
                           <div>
                             <p className="text-[10px] font-bold tracking-widest uppercase text-[#888] mb-0.5">Order ID</p>
                             <p className="font-bold text-black">{order.id}</p>
@@ -459,7 +459,7 @@ export default function ProfilePage() {
                         </div>
                       </div>
                       {/* Ordered Images */}
-                      <div className="px-6 py-4 flex flex-wrap gap-4 border-t border-[#f5f5f5] bg-white">
+                      <div className="px-4 sm:px-6 py-4 flex flex-wrap gap-4 border-t border-[#f5f5f5] bg-white">
                         {order.items.slice(0, 5).map((item, idx) => {
                           const product = PRODUCTS.find(p => p.id === item.productId);
                           if (!product) return null;
@@ -491,7 +491,7 @@ export default function ProfilePage() {
 
       {/* ── FOOTER LINKS ── */}
       <div className="bg-white border-t border-[#ddd]">
-        <div className="max-w-[1100px] mx-auto px-20 py-6 flex gap-5">
+        <div className="max-w-[1100px] mx-auto px-5 sm:px-10 md:px-20 py-6 flex gap-5">
 
           <Link href="/privacy"  className="text-[13px] text-black underline underline-offset-[3px] hover:opacity-70 transition-opacity">Privacy policy</Link>
           <Link href="/terms"    className="text-[13px] text-black underline underline-offset-[3px] hover:opacity-70 transition-opacity">Terms of service</Link>

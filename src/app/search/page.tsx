@@ -178,7 +178,7 @@ function SearchContent() {
 
         {/* Results Grid */}
         {hasSearched && results.length > 0 && (
-          <div className="grid gap-8" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-8">
             {results.map((product) => (
               <ProductCardCategory key={product.id} product={product} />
             ))}
