@@ -24,8 +24,8 @@ const Footer: React.FC = () => {
     setOpenSection(openSection === section ? null : section);
   };
 
-  // Hide footer on profile, order, and auth pages
-  if (pathname === '/profile' || pathname.startsWith('/orders') || pathname === '/login' || pathname === '/register' || pathname === '/forgot-password' || pathname === '/update-password') {
+  // Hide footer on profile, order, checkout and auth pages
+  if (pathname === '/checkout' || pathname === '/profile' || pathname.startsWith('/orders') || pathname === '/login' || pathname === '/register' || pathname === '/forgot-password' || pathname === '/update-password') {
     return null;
   }
 

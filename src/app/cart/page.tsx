@@ -152,12 +152,12 @@ const CartPage: React.FC = () => {
 
               <div className="text-xs text-gray-400 mb-5 mt-2">Taxes calculated at checkout</div>
 
-              <button 
-                disabled
-                className="block w-full text-center py-4 bg-gray-800 text-white border-none text-[13px] font-semibold tracking-[1.5px] uppercase rounded opacity-60 cursor-not-allowed"
+              <Link 
+                href="/checkout"
+                className="block w-full text-center py-4 bg-gray-800 text-white border-none text-[13px] font-semibold tracking-[1.5px] uppercase rounded hover:bg-gray-700 transition-colors"
               >
                 Check Out
-              </button>
+              </Link>
             </aside>
           )}
         </div>

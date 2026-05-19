@@ -45,6 +45,19 @@ const Navbar: React.FC = () => {
 
   const totalItems = mounted ? cartCount() : 0;
 
+  // Special Navbar for checkout
+  if (pathname === '/checkout') {
+    return (
+      <header className="bg-white h-[72px] border-b border-gray-100 flex items-center">
+        <div className="max-w-[1400px] mx-auto px-5 w-full">
+          <Link href="/" className="text-2xl font-bold text-gray-800">
+            Flone<span className="text-red-400">.</span>
+          </Link>
+        </div>
+      </header>
+    );
+  }
+
   // Hide Navbar on auth pages
   if (pathname === '/login' || pathname === '/register' || pathname === '/forgot-password' || pathname === '/update-password') {
     return null;
