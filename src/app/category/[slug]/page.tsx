@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { ChevronRight, Filter } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { PRODUCTS } from '@/data/mock';
+import { useDbStore } from '@/store/dbStore';
 import { formatPrice } from '@/lib/utils';
 import ProductCardCategory from '@/components/store/ProductCardCategory';
 
@@ -12,6 +12,9 @@ export default function CategoryPage() {
   const { slug } = useParams<{ slug: string }>();
   const [gridCols, setGridCols] = useState(4);
   const [isMobile, setIsMobile] = useState(false);
+  
+  const allProducts = useDbStore((state) => state.products);
+  const loading = useDbStore((state) => state.loading);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -28,13 +31,18 @@ export default function CategoryPage() {
 
   const categoryProducts = useMemo(() => {
     if (slug.toLowerCase() === 'flash-sale' || slug.toLowerCase() === 'flash sale') {
-      return PRODUCTS.filter(p => p.isFlashSale);
+      return allProducts.filter(p => p.isFlashSale);
     }
-    return PRODUCTS.filter(p => 
+    return allProducts.filter(p => 
       p.category.toLowerCase() === slug.toLowerCase() ||
       p.category.toLowerCase().replace(/ /g, '-') === slug.toLowerCase()
     );
-  }, [slug]);
+  }, [slug, allProducts]);
+
+  if (loading) {
+    return <div className="container py-40 text-center font-serif italic text-3xl text-gray-300">Loading Boutique Category...</div>;
+  }
+
 
   const handleLayoutChange = (cols: number) => {
     if (!isMobile) setGridCols(cols);

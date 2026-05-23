@@ -13,21 +13,26 @@ import {
 } from 'lucide-react';
 
 import { usePathname } from 'next/navigation';
-import { CATEGORY_NAV } from '@/data/mock';
+import { useDbStore } from '@/store/dbStore';
 
 const Footer: React.FC = () => {
   const pathname = usePathname();
   const [openSection, setOpenSection] = useState<string | null>(null);
-  const socialIcons = [Globe, MessageCircle, Play];
+  
+  const categoryNav = useDbStore((state) => state.categoryNav);
+  const storeSettings = useDbStore((state) => state.storeSettings);
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section);
   };
 
   // Hide footer on profile, order, checkout and auth pages
-  if (pathname === '/checkout' || pathname === '/profile' || pathname.startsWith('/orders') || pathname === '/login' || pathname === '/register' || pathname === '/forgot-password' || pathname === '/update-password') {
+  if (pathname === '/checkout' || pathname === '/profile' || pathname.startsWith('/orders') || pathname === '/login' || pathname === '/forgot-password' || pathname === '/update-password') {
     return null;
   }
+  
+  const logoName = storeSettings?.storeName || 'AXZRON';
+  const tagline = storeSettings?.storeTagline || "Premium fashion for the modern gentleman.";
 
   return (
     <footer className="bg-gray-100 pt-10 sm:pt-16 pb-6 sm:pb-8 border-t border-gray-200 font-sans">
@@ -36,16 +41,17 @@ const Footer: React.FC = () => {
           {/* LEFT SIDE */}
           <div className="lg:max-w-sm mb-6 sm:mb-0">
             <Link href="/" className="text-2xl font-bold text-gray-800 mb-4 block">
-              Flone<span className="text-red-400">.</span>
+              {logoName}<span className="text-red-400">.</span>
             </Link>
             <p className="text-sm text-gray-500 leading-relaxed mb-5">
-              © 2026 Flone.
+              © 2026 {logoName}.
               <br />
               All Rights Reserved
               <br />
               <br />
-              Premium men's fashion for the modern gentleman.
+              {tagline}
             </p>
+
             <div className="flex gap-3 sm:gap-4">
               {/* Globe */}
               <a href="#" className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-800 hover:bg-gray-800 hover:text-white hover:border-gray-800 transition-all font-sans">
@@ -101,7 +107,7 @@ const Footer: React.FC = () => {
                 <span className="sm:hidden text-lg leading-none">{openSection === 'shop' ? '−' : '+'}</span>
               </h4>
               <ul className={`space-y-2 list-none p-0 mt-4 sm:mt-0 ${openSection === 'shop' ? 'block' : 'hidden'} sm:!block`}>
-                {CATEGORY_NAV.map((category) => (
+                {categoryNav.map((category) => (
                   <li key={category.id}>
                     <Link href={`/category/${category.id.toLowerCase()}`} className="text-sm text-gray-500 hover:text-red-400 transition-colors uppercase tracking-wider">
                       {category.label}
@@ -115,13 +121,13 @@ const Footer: React.FC = () => {
               <h4 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-5">CONTACT US</h4>
               <ul className="space-y-3 list-none p-0">
                 <li className="flex items-center gap-3 text-sm text-gray-500">
-                  <MapPin size={16} /> 123 Fashion Street, NY 10001
+                  <MapPin size={16} /> {storeSettings?.storeAddress || '123 Boutique Boulevard, Colombo 03'}
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-500">
-                  <Phone size={16} /> +1 234 567 8900
+                  <Phone size={16} /> {storeSettings?.storePhone || '+94 76 212 7588'}
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-500">
-                  <Mail size={16} /> hello@flone.com
+                  <Mail size={16} /> {storeSettings?.storeEmail || 'hello@axzron.com'}
                 </li>
               </ul>
               <div className="flex gap-3 mt-5">

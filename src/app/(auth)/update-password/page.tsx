@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Eye, EyeOff, Lock, CheckCircle } from 'lucide-react';
+import { useDbStore } from '@/store/dbStore';
 
 export default function UpdatePasswordPage() {
   const [showNew, setShowNew] = useState(false);
@@ -11,6 +12,8 @@ export default function UpdatePasswordPage() {
   const [confirmPass, setConfirmPass] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const storeSettings = useDbStore((state) => state.storeSettings);
+  const storeName = storeSettings?.storeName || 'AXZRON';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +46,7 @@ export default function UpdatePasswordPage() {
         {/* Brand */}
         <div className="text-center mb-10">
           <Link href="/" className="text-3xl font-bold text-gray-800 mb-6 inline-block">
-            Flone<span className="text-red-400">.</span>
+            {storeName}<span className="text-red-400">.</span>
           </Link>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Update Password</h1>
           <p className="text-sm text-gray-500">

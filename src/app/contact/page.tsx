@@ -1,8 +1,17 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import { ChevronRight, MapPin, Phone, Mail } from 'lucide-react';
+import { useDbStore } from '@/store/dbStore';
 
 export default function ContactPage() {
+  const storeSettings = useDbStore((state) => state.storeSettings);
+  const storeName = storeSettings?.storeName || 'AXZRON';
+  const storeEmail = storeSettings?.storeEmail || 'hello@axzron.com';
+  const storePhone = storeSettings?.storePhone || '+94 76 212 7588';
+  const storeAddress = storeSettings?.storeAddress || '123 Boutique Boulevard, Colombo 03, Sri Lanka';
+
   return (
     <div className="bg-white min-h-screen font-sans text-[#333]">
       {/* Breadcrumb */}
@@ -55,7 +64,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-bold uppercase text-sm tracking-widest mb-2">Location</h3>
-                  <p className="text-gray-500 text-sm leading-relaxed">123 Fashion Street, Suit 456<br />New York, NY 10001, USA</p>
+                  <p className="text-gray-500 text-sm leading-relaxed">{storeAddress}</p>
                 </div>
               </div>
               <div className="flex gap-5">
@@ -64,7 +73,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-bold uppercase text-sm tracking-widest mb-2">Phone</h3>
-                  <p className="text-gray-500 text-sm leading-relaxed">+1 (234) 567-8900<br />Mon - Fri: 9:00 AM - 6:00 PM</p>
+                  <p className="text-gray-500 text-sm leading-relaxed">{storePhone}<br />Mon - Sat: 9:00 AM - 6:00 PM</p>
                 </div>
               </div>
               <div className="flex gap-5">
@@ -73,7 +82,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-bold uppercase text-sm tracking-widest mb-2">Email</h3>
-                  <p className="text-gray-500 text-sm leading-relaxed">hello@flone.com<br />support@flone.com</p>
+                  <p className="text-gray-500 text-sm leading-relaxed">{storeEmail}</p>
                 </div>
               </div>
             </div>

@@ -1,9 +1,46 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { MOCK_USER, ORDERS, MOCK_ADDRESSES, Address, PRODUCTS } from '@/data/mock';
+import { useDbStore } from '@/store/dbStore';
+import { Address, User, Order } from '@/types/store';
+
+const LOCAL_USER: User = {
+  id: 'usr_1',
+  name: 'Dhaya Panchalingam',
+  email: 'dhaya@example.com',
+  phone: '0771234567',
+  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&q=80',
+};
+
+const LOCAL_ADDRESSES: Address[] = [
+  {
+    id: 'addr_1',
+    label: 'Home',
+    name: 'Dhaya Panchalingam',
+    line1: '123, Galle Road',
+    city: 'Colombo 03',
+    state: 'Western',
+    pincode: '00300',
+    phone: '0771234567',
+    isDefault: true,
+  }
+];
+
+const LOCAL_ORDERS: Order[] = [
+  {
+    id: 'ORD-8947-1',
+    date: '18 May 2026',
+    total: 3500,
+    status: 'Delivered',
+    items: [
+      { productId: '2', quantity: 1, size: 'M', color: 'Black' }
+    ],
+    addressId: 'addr_1',
+    paymentMethod: 'Visa',
+  }
+];
 
 /* ─── tiny icon helpers ─── */
 const EditIcon = () => (
@@ -34,16 +71,17 @@ const UserIcon = () => (
 
 type Tab = 'profile' | 'orders';
 
-export default function ProfilePage() {
+function ProfileContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const queryTab = searchParams.get('tab') as Tab | null;
+  const allProducts = useDbStore((state) => state.products);
 
   const [activeTab, setActiveTab] = useState<Tab>(queryTab || 'profile');
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showAddAddress, setShowAddAddress] = useState(false);
-  const [userName, setUserName] = useState(MOCK_USER.name);
-  const [addresses, setAddresses] = useState<Address[]>(MOCK_ADDRESSES);
+  const [userName, setUserName] = useState(LOCAL_USER.name);
+  const [addresses, setAddresses] = useState<Address[]>(LOCAL_ADDRESSES);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
 
   useEffect(() => {
@@ -163,7 +201,7 @@ export default function ProfilePage() {
                 <label className="block text-xs text-[#888] mb-1.5">Email</label>
                 <input
                   type="email"
-                  value={MOCK_USER.email}
+                  value={LOCAL_USER.email}
                   readOnly
                   className="w-full px-4 py-3.5 border border-[#ddd] rounded-lg text-[15px] outline-none bg-[#fafafa] text-gray-500"
                 />
@@ -352,7 +390,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="py-2.5 mt-3">
                   <span className="block text-[14px] text-[#888] mb-1">Email</span>
-                  <span className="text-[15px] text-black">{MOCK_USER.email}</span>
+                  <span className="text-[15px] text-black">{LOCAL_USER.email}</span>
                 </div>
               </div>
 
@@ -428,14 +466,14 @@ export default function ProfilePage() {
             <div>
               <h1 className="text-[28px] font-semibold mb-8">Orders</h1>
 
-              {ORDERS.length === 0 ? (
+              {LOCAL_ORDERS.length === 0 ? (
                 <div className="border border-[#eee] rounded-xl py-16 text-center">
                   <h3 className="text-[18px] font-semibold mb-2">No orders yet</h3>
                   <p className="text-[15px] text-[#666]">Go to store to place an order.</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
-                  {ORDERS.map(order => (
+                  {LOCAL_ORDERS.map(order => (
                     <div key={order.id} className="border border-[#eee] rounded-xl overflow-hidden hover:shadow-md transition-shadow">
                       {/* header row */}
                       <div className="flex flex-wrap items-start sm:items-center justify-between gap-4 px-4 sm:px-6 py-4 bg-[#fafafa] border-b border-[#eee]">
@@ -461,7 +499,7 @@ export default function ProfilePage() {
                       {/* Ordered Images */}
                       <div className="px-4 sm:px-6 py-4 flex flex-wrap gap-4 border-t border-[#f5f5f5] bg-white">
                         {order.items.slice(0, 5).map((item, idx) => {
-                          const product = PRODUCTS.find(p => p.id === item.productId);
+                          const product = allProducts.find(p => p.id === item.productId);
                           if (!product) return null;
                           return (
                             <Link 
@@ -498,5 +536,13 @@ export default function ProfilePage() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={<div className="container py-40 text-center font-serif italic text-3xl text-gray-300">Loading Profile...</div>}>
+      <ProfileContent />
+    </Suspense>
   );
 }

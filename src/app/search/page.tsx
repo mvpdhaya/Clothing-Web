@@ -6,7 +6,7 @@ import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Search, X } from 'lucide-react';
-import { PRODUCTS } from '@/data/mock';
+import { useDbStore } from '@/store/dbStore';
 import ProductCardCategory from '@/components/store/ProductCardCategory';
 
 function SearchContent() {
@@ -16,18 +16,33 @@ function SearchContent() {
 
   const [query, setQuery] = useState(initialQuery);
   const [inputValue, setInputValue] = useState(initialQuery);
+  
+  const allProducts = useDbStore((state) => state.products);
+  const loading = useDbStore((state) => state.loading);
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    return PRODUCTS.filter(
+    return allProducts.filter(
       (p) =>
         p.name.toLowerCase().includes(q) ||
         p.category.toLowerCase().includes(q) ||
         p.subcategory.toLowerCase().includes(q) ||
         (p.description && p.description.toLowerCase().includes(q))
     );
-  }, [query]);
+  }, [query, allProducts]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <Search size={32} className="text-gray-300 mx-auto mb-4 animate-pulse" />
+          <p className="text-sm uppercase tracking-widest text-gray-400 font-semibold">Loading boutique search...</p>
+        </div>
+      </div>
+    );
+  }
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

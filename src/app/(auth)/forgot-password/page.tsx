@@ -3,10 +3,13 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
+import { useDbStore } from '@/store/dbStore';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const storeSettings = useDbStore((state) => state.storeSettings);
+  const storeName = storeSettings?.storeName || 'AXZRON';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,7 +22,7 @@ export default function ForgotPasswordPage() {
         {/* Brand */}
         <div className="text-center mb-10">
           <Link href="/" className="text-3xl font-bold text-gray-800 mb-6 inline-block">
-            Flone<span className="text-red-400">.</span>
+            {storeName}<span className="text-red-400">.</span>
           </Link>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Forgot Password</h1>
           <p className="text-sm text-gray-500">

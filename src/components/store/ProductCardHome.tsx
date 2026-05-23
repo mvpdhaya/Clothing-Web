@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 
-import { Product } from '@/data/mock';
+import { Product } from '@/types/product';
 import { formatPrice } from '@/lib/utils';
 
 interface Props {

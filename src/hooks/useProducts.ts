@@ -1,19 +1,23 @@
-import { PRODUCTS } from '@/data/mock';
+import { useDbStore } from '@/store/dbStore';
 
 export function useProducts() {
-  // In the future, this will fetch from Supabase
-  const getAllProducts = () => PRODUCTS;
-  
-  const getProductBySlug = (slug: string) => 
-    PRODUCTS.find(p => p.id === slug || p.name.toLowerCase().replace(/ /g, '-') === slug);
+  const products = useDbStore((state) => state.products);
+  const loading = useDbStore((state) => state.loading);
+  const getProductBySlug = useDbStore((state) => state.getProductBySlug);
+  const getBySubcategory = useDbStore((state) => state.getBySubcategory);
+
+  const getAllProducts = () => products;
 
   const getProductsByCategory = (category: string) =>
-    PRODUCTS.filter(p => p.category.toLowerCase() === category.toLowerCase());
+    products.filter(p => p.category.toLowerCase() === category.toLowerCase());
 
   return {
-    products: PRODUCTS,
+    products,
+    loading,
     getAllProducts,
     getProductBySlug,
-    getProductsByCategory
+    getProductsByCategory,
+    getBySubcategory
   };
 }
+

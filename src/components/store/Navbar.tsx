@@ -11,8 +11,8 @@ import {
   X,
 } from 'lucide-react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { CATEGORY_NAV } from '@/data/mock';
 import { useCartStore } from '@/store/cartStore';
+import { useDbStore } from '@/store/dbStore';
 
 const Navbar: React.FC = () => {
   const { cartCount } = useCartStore();
@@ -20,6 +20,9 @@ const Navbar: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  
+  const categoryNav = useDbStore((state) => state.categoryNav);
+  const storeSettings = useDbStore((state) => state.storeSettings);
 
   useEffect(() => {
     setMounted(true);
@@ -44,6 +47,11 @@ const Navbar: React.FC = () => {
   const activeTab = searchParams.get('tab') || 'profile';
 
   const totalItems = mounted ? cartCount() : 0;
+  
+  const logoName = storeSettings?.storeName || 'AXZRON';
+  const shippingMsg = storeSettings?.freeShippingEnabled
+    ? `FREE DELIVERY ON ORDERS ABOVE LKR ${storeSettings.freeShippingThreshold.toLocaleString()}/-`
+    : 'FREE DELIVERY ON ALL ORDERS';
 
   // Special Navbar for checkout
   if (pathname === '/checkout') {
@@ -51,7 +59,7 @@ const Navbar: React.FC = () => {
       <header className="bg-white h-[72px] border-b border-gray-100 flex items-center">
         <div className="max-w-[1400px] mx-auto px-5 w-full">
           <Link href="/" className="text-2xl font-bold text-gray-800">
-            Flone<span className="text-red-400">.</span>
+            {logoName}<span className="text-red-400">.</span>
           </Link>
         </div>
       </header>
@@ -59,13 +67,13 @@ const Navbar: React.FC = () => {
   }
 
   // Hide Navbar on auth pages
-  if (pathname === '/login' || pathname === '/register' || pathname === '/forgot-password' || pathname === '/update-password') {
+  if (pathname === '/login' || pathname === '/forgot-password' || pathname === '/update-password') {
     return null;
   }
 
-  const navItems = CATEGORY_NAV.map(cat => ({
+  const navItems = categoryNav.map(cat => ({
     label: cat.label.toUpperCase(),
-    href: cat.id === 'Flash Sale' ? '/category/Flash Sale' : `/category/${cat.id.toLowerCase()}`,
+    href: cat.id.toLowerCase() === 'flash sale' ? '/category/Flash Sale' : `/category/${cat.id.toLowerCase()}`,
     hasDropdown: cat.subcategories.length > 0,
     subcategories: cat.subcategories.map(sub => ({
       label: sub.label,
@@ -73,13 +81,14 @@ const Navbar: React.FC = () => {
     }))
   }));
 
+
   return (
     <>
       {/* Top Bar (Scrolls away) */}
       <div className="overflow-hidden whitespace-nowrap bg-[#0a1628] py-1.5 text-center text-[11px] font-semibold tracking-wide text-white w-full">
         <div className="inline-block animate-[scroll_25s_linear_infinite]">
           {[...Array(6)].map((_, i) => (
-            <span key={i} className="inline-block px-10">FREE DELIVERY ON ORDERS ABOVE LKR 13,000/-</span>
+            <span key={i} className="inline-block px-10">{shippingMsg}</span>
           ))}
         </div>
       </div>
@@ -98,7 +107,7 @@ const Navbar: React.FC = () => {
             {/* Left: Logo */}
             <div className="flex-1">
               <Link href="/" className="text-2xl font-bold text-gray-800">
-                Flone<span className="text-red-400">.</span>
+                {logoName}<span className="text-red-400">.</span>
               </Link>
             </div>
 
@@ -220,7 +229,7 @@ const Navbar: React.FC = () => {
         {/* Drawer Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
           <Link href="/" className="text-xl font-bold text-gray-800" onClick={() => setMenuOpen(false)}>
-            Flone<span className="text-red-400">.</span>
+            {logoName}<span className="text-red-400">.</span>
           </Link>
           <button onClick={() => setMenuOpen(false)} className="text-gray-500 hover:text-gray-800 transition-colors">
             <X size={20} />

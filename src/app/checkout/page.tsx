@@ -2,14 +2,29 @@
 
 import React, { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useCartStore } from '@/store/cartStore';
-import { PRODUCTS, MOCK_ADDRESSES, Address } from '@/data/mock';
+import { useCartStore, CartItem } from '@/store/cartStore';
+import { useDbStore } from '@/store/dbStore';
+import { Address } from '@/types/store';
 import { formatPrice } from '@/lib/utils';
 import styles from './checkout.module.css';
 
 function CheckoutContent() {
   const searchParams = useSearchParams();
   const { cart, cartTotal } = useCartStore();
+  const allProducts = useDbStore((state) => state.products);
+  const MOCK_ADDRESSES = [
+    {
+      id: 'addr_1',
+      label: 'Home',
+      name: 'Thaya Yuthan',
+      line1: '123, Galle Road',
+      city: 'Colombo 03',
+      state: 'Western',
+      pincode: '00300',
+      phone: '0771234567',
+      isDefault: true,
+    }
+  ];
   
   const isBuyNow = searchParams.get('buyNow') === 'true';
   const buyNowId = searchParams.get('id');
@@ -40,11 +55,11 @@ function CheckoutContent() {
   const [addrDefault, setAddrDefault] = useState(false);
 
   // Determine items to display
-  let displayItems = [];
+  let displayItems: CartItem[] = [];
   let subtotal = 0;
 
   if (isBuyNow && buyNowId) {
-    const product = PRODUCTS.find(p => p.id === buyNowId);
+    const product = allProducts.find(p => p.id === buyNowId);
     if (product) {
       displayItems = [{
         product,
@@ -265,7 +280,7 @@ function CheckoutContent() {
               <div className={styles.productInfo}>
                 <div className={styles.productName}>{item.product.name}</div>
                 <div className={styles.productVariant}>
-                  {item.selectedColor.name} {item.selectedSize ? `/ ${item.selectedSize}` : ''}
+                  {item.selectedColor?.name || ''} {item.selectedSize ? `/ ${item.selectedSize}` : ''}
                 </div>
               </div>
               <div className={styles.productPrice}>{formatPrice(item.product.price * item.quantity)}</div>
@@ -545,13 +560,13 @@ function CheckoutContent() {
                 <button
                   type="button"
                   onClick={() => setIsAddAddressModalOpen(false)}
-                  style={{ px: '20px', py: '10px', padding: '10px 20px', border: '1px solid #ccc', borderRadius: '8px', fontSize: '14px', fontWeight: 500, backgroundColor: '#fff', cursor: 'pointer' }}
+                  style={{ padding: '10px 20px', border: '1px solid #ccc', borderRadius: '8px', fontSize: '14px', fontWeight: 500, backgroundColor: '#fff', cursor: 'pointer' }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  style={{ px: '20px', py: '10px', padding: '10px 20px', backgroundColor: '#1a1a1a', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 500, cursor: 'pointer' }}
+                  style={{ padding: '10px 20px', backgroundColor: '#1a1a1a', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 500, cursor: 'pointer' }}
                 >
                   Save
                 </button>

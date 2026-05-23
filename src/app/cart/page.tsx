@@ -4,7 +4,7 @@ import React, { useMemo, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cartStore';
-import { PRODUCTS } from '@/data/mock';
+import { useDbStore } from '@/store/dbStore';
 import ProductCardHome from '@/components/store/ProductCardHome';
 import { formatPrice } from '@/lib/utils';
 import { Truck, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -13,13 +13,17 @@ const CartPage: React.FC = () => {
   const { cart, removeFromCart, updateCartQuantity, cartTotal } = useCartStore();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = React.useState(false);
+  
+  const allProducts = useDbStore((state) => state.products);
+  const storeSettings = useDbStore((state) => state.storeSettings);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Recommendation products - using first 8 from mock data
-  const recProducts = useMemo(() => PRODUCTS.slice(0, 8), []);
+  // Recommendation products - using first 8 from database
+  const recProducts = useMemo(() => allProducts.slice(0, 8), [allProducts]);
+
 
   const handleScroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -37,7 +41,7 @@ const CartPage: React.FC = () => {
   };
 
   const subtotal = cartTotal();
-  const shippingFreeThreshold = 10000;
+  const shippingFreeThreshold = storeSettings?.freeShippingThreshold || 10000;
   const isFreeShipping = subtotal >= shippingFreeThreshold;
 
   if (!mounted) return <div className="min-h-screen bg-white" />;
@@ -71,7 +75,7 @@ const CartPage: React.FC = () => {
               </div>
 
               {cart.map((item) => (
-                <div key={`${item.product.id}-${item.selectedSize}-${item.selectedColor.hex}`} className="grid grid-cols-1 lg:grid-cols-[2fr_1fr_1fr] py-6 border-b border-gray-100 items-center gap-4 lg:gap-0">
+                <div key={`${item.product.id}-${item.selectedSize}-${item.selectedColor?.hex || ''}`} className="grid grid-cols-1 lg:grid-cols-[2fr_1fr_1fr] py-6 border-b border-gray-100 items-center gap-4 lg:gap-0">
                   <div className="flex gap-5 items-start">
                     <div className="w-[100px] h-[130px] relative bg-gray-50 rounded overflow-hidden flex-shrink-0">
                       <Image 
@@ -86,9 +90,11 @@ const CartPage: React.FC = () => {
                       <h3 className="text-[15px] font-medium mb-1 text-gray-800 leading-snug">
                         {item.product.name}
                       </h3>
-                      <p className="text-[13px] text-gray-500 mb-1">{item.selectedColor.name} / {item.selectedSize}</p>
+                      <p className="text-[13px] text-gray-500 mb-1">
+                        {item.selectedColor ? `${item.selectedColor.name} / ` : ''}{item.selectedSize}
+                      </p>
                       <button 
-                        onClick={() => removeFromCart(item.product.id, item.selectedSize, item.selectedColor.hex)}
+                        onClick={() => removeFromCart(item.product.id, item.selectedSize, item.selectedColor?.hex || '')}
                         className="text-xs text-gray-500 underline bg-transparent border-none cursor-pointer p-0 hover:text-gray-800 mt-2 transition-colors uppercase tracking-widest font-semibold"
                       >
                         Remove
@@ -98,7 +104,7 @@ const CartPage: React.FC = () => {
                   
                   <div className="flex items-center border border-gray-200 w-fit lg:justify-self-center">
                     <button 
-                      onClick={() => updateCartQuantity(item.product.id, item.selectedSize, item.selectedColor.hex, -1)}
+                      onClick={() => updateCartQuantity(item.product.id, item.selectedSize, item.selectedColor?.hex || '', -1)}
                       className="w-9 h-9 border-none bg-white cursor-pointer text-lg text-gray-500 flex items-center justify-center hover:bg-gray-50 transition-colors"
                     >
                       −
@@ -107,7 +113,7 @@ const CartPage: React.FC = () => {
                       {item.quantity}
                     </div>
                     <button 
-                      onClick={() => updateCartQuantity(item.product.id, item.selectedSize, item.selectedColor.hex, 1)}
+                      onClick={() => updateCartQuantity(item.product.id, item.selectedSize, item.selectedColor?.hex || '', 1)}
                       className="w-9 h-9 border-none bg-white cursor-pointer text-lg text-gray-500 flex items-center justify-center hover:bg-gray-50 transition-colors"
                     >
                       +

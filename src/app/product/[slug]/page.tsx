@@ -6,7 +6,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { PRODUCTS } from '@/data/mock';
+import { useDbStore } from '@/store/dbStore';
 import ProductCardHome from '@/components/store/ProductCardHome';
 import { useCartStore } from '@/store/cartStore';
 import { cn, formatPrice } from '@/lib/utils';
@@ -17,28 +17,56 @@ export default function ProductDetailPage() {
   const router = useRouter();
   const { addToCart } = useCartStore();
   const [mounted, setMounted] = useState(false);
+  
+  const allProducts = useDbStore((state) => state.products);
+  const getProductBySlug = useDbStore((state) => state.getProductBySlug);
+  const loading = useDbStore((state) => state.loading);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const product = useMemo(() => 
-    PRODUCTS.find(p => p.id === slug || p.name.toLowerCase().replace(/ /g, '-') === slug), 
-    [slug]
+    getProductBySlug(slug), 
+    [slug, getProductBySlug, allProducts]
   );
 
   const [currentImg, setCurrentImg] = useState(0);
   const [qty, setQty] = useState(1);
-  const [selectedColor, setSelectedColor] = useState(product?.colors[0]?.name || '');
+  const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
   const [openAcc, setOpenAcc] = useState<string>('desc');
   const [sizeError, setSizeError] = useState(false);
 
+  const relatedRef = useRef<HTMLDivElement>(null);
+  const accRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (product) {
       setSelectedColor(product.colors[0]?.name || '');
+      setCurrentImg(0);
+      setQty(1);
+      setSelectedSize('');
     }
   }, [product]);
+
+  const related = useMemo(() => 
+    product ? allProducts.filter(p => p.category === product.category && p.id !== product.id).slice(0, 10) : [],
+    [allProducts, product]
+  );
+
+  const accessories = useMemo(() => 
+    product ? allProducts.filter(p => p.category !== product.category).slice(0, 10) : [],
+    [allProducts, product]
+  );
+
+  if (loading) {
+    return (
+      <div className="container py-40 text-center font-serif italic text-3xl text-gray-300">
+        Loading Boutique Details...
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -49,15 +77,10 @@ export default function ProductDetailPage() {
     );
   }
 
-  const relatedRef = useRef<HTMLDivElement>(null);
-  const accRef = useRef<HTMLDivElement>(null);
-
-  const related = PRODUCTS.filter(p => p.category === product.category && p.id !== product.id).slice(0, 10);
-  const accessories = PRODUCTS.filter(p => p.category !== product.category).slice(0, 10);
-
   const chgImg = (d: number) => setCurrentImg((p) => (p + d + product.images.length) % product.images.length);
   const updQty = (d: number) => setQty((p) => Math.max(1, p + d));
   const toggleAcc = (id: string) => setOpenAcc((p) => (p === id ? '' : id));
+
 
   const handleScroll = (ref: React.RefObject<HTMLDivElement | null>, direction: 'left' | 'right') => {
     if (ref.current) {

@@ -1,8 +1,14 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
+import { useDbStore } from '@/store/dbStore';
 
 export default function AboutPage() {
+  const storeSettings = useDbStore((state) => state.storeSettings);
+  const storeName = storeSettings?.storeName || 'AXZRON';
+
   return (
     <div className="bg-white min-h-screen font-sans text-[#333]">
       {/* Breadcrumb */}
@@ -29,7 +35,7 @@ export default function AboutPage() {
           <div>
             <h2 className="text-3xl font-bold mb-6 uppercase tracking-wider">Our Story</h2>
             <p className="text-gray-600 leading-relaxed mb-4">
-              Founded in 2026, Flone was born out of a passion for timeless style and modern elegance. We believe that fashion should be a reflection of one's personality—refined, confident, and effortless.
+              Founded in 2026, {storeName} was born out of a passion for timeless style and modern elegance. We believe that fashion should be a reflection of one's personality—refined, confident, and effortless.
             </p>
             <p className="text-gray-600 leading-relaxed">
               Our journey started with a simple goal: to provide high-quality, sustainably sourced menswear that doesn't compromise on design or comfort. Today, we are proud to serve a community of modern gentlemen who appreciate the finer things in life.

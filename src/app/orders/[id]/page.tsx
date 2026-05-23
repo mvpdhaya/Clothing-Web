@@ -5,15 +5,33 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight, PackageCheck, Truck, MapPin, CreditCard } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { ORDERS, PRODUCTS } from '@/data/mock';
+import { useDbStore } from '@/store/dbStore';
+import { Order } from '@/types/store';
 import { cn, formatPrice } from '@/lib/utils';
+
+const LOCAL_ORDERS: Order[] = [
+  {
+    id: 'ORD-8947-1',
+    date: '18 May 2026',
+    total: 3500,
+    status: 'Delivered',
+    items: [
+      { productId: '2', quantity: 1, size: 'M', color: 'Black' }
+    ],
+    addressId: 'addr_1',
+    paymentMethod: 'Visa',
+  }
+];
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const order = ORDERS.find((o) => o.id === id) ?? ORDERS[0];
+  const allProducts = useDbStore((state) => state.products);
+  
+  const order = LOCAL_ORDERS.find((o) => o.id === id) ?? LOCAL_ORDERS[0];
   const orderProducts = order.items.map((item) =>
-    PRODUCTS.find((p) => p.id === item.productId)
+    allProducts.find((p) => p.id === item.productId)
   ).filter(Boolean);
+
 
   return (
     <div className="min-h-screen bg-[var(--color-background)]">

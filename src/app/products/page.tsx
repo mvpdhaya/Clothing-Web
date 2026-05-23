@@ -6,7 +6,7 @@ import React, { useState, useMemo, Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronDown, Filter as FilterIcon, X } from 'lucide-react';
-import { PRODUCTS } from '@/data/mock';
+import { useDbStore } from '@/store/dbStore';
 import { cn, formatPrice } from '@/lib/utils';
 import ProductCardCategory from '@/components/store/ProductCardCategory';
 
@@ -35,6 +35,9 @@ function ProductsContent() {
   const [gridCols, setGridCols] = useState(4);
   const [isMobile, setIsMobile] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  
+  const allProducts = useDbStore((state) => state.products);
+  const loading = useDbStore((state) => state.loading);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -48,17 +51,26 @@ function ProductsContent() {
   }, []);
 
   const products = useMemo(() => {
-    let list = [...PRODUCTS];
+    let list = [...allProducts];
     if (category === 'Sale') list = list.filter(p => p.isSale);
-    else if (category) list = list.filter(p => p.category === category);
+    else if (category) {
+      list = list.filter(p => p.category.toLowerCase() === category.toLowerCase());
+    }
     
-    if (subcategory) list = list.filter(p => p.subcategory === subcategory);
+    if (subcategory) {
+      list = list.filter(p => p.subcategory.toLowerCase() === subcategory.toLowerCase());
+    }
 
     if (sizes.length > 0) list = list.filter(p => p.sizes.some(s => sizes.includes(s)));
     if (sort === 'price-low') list.sort((a, b) => a.price - b.price);
     if (sort === 'price-high') list.sort((a, b) => b.price - a.price);
     return list;
-  }, [category, subcategory, sizes, sort]);
+  }, [allProducts, category, subcategory, sizes, sort]);
+
+  if (loading) {
+    return <div className="container py-40 text-center font-serif italic text-3xl text-gray-300">Loading Boutique...</div>;
+  }
+
 
   const toggleSize = (s: string) =>
     setSizes(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
