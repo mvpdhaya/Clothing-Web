@@ -1,46 +1,55 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useCartStore, CartItem } from '@/store/cartStore';
 import { useDbStore } from '@/store/dbStore';
-import { Address } from '@/types/store';
 import { formatPrice } from '@/lib/utils';
+import { supabase } from '@/lib/supabase/client';
 import styles from './checkout.module.css';
 
 function CheckoutContent() {
   const searchParams = useSearchParams();
   const { cart, cartTotal } = useCartStore();
   const allProducts = useDbStore((state) => state.products);
-  const MOCK_ADDRESSES = [
-    {
-      id: 'addr_1',
-      label: 'Home',
-      name: 'Thaya Yuthan',
-      line1: '123, Galle Road',
-      city: 'Colombo 03',
-      state: 'Western',
-      pincode: '00300',
-      phone: '0771234567',
-      isDefault: true,
+
+  const [customer, setCustomer] = useState<any>(null);
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [selectedAddress, setSelectedAddress] = useState<any>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+
+  useEffect(() => {
+    async function fetchCustomerData() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setLoadingUser(false); return; }
+
+      const { data: custData } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (custData) setCustomer(custData);
+      else setCustomer({ email: user.email, full_name: user.user_metadata?.name || '' });
+
+      const { data: addrData } = await supabase
+        .from('addresses')
+        .select('*')
+        .eq('customer_id', user.id)
+        .order('is_default', { ascending: false });
+      if (addrData && addrData.length > 0) {
+        setAddresses(addrData);
+        setSelectedAddress(addrData.find((a: any) => a.is_default) || addrData[0]);
+      }
+      setLoadingUser(false);
     }
-  ];
-  
-  const isBuyNow = searchParams.get('buyNow') === 'true';
-  const buyNowId = searchParams.get('id');
-  const buyNowQty = parseInt(searchParams.get('qty') || '1');
-  const buyNowSize = searchParams.get('size') || '';
-  const buyNowColor = searchParams.get('color') || '';
-  const buyNowColorHex = searchParams.get('colorHex') || '';
+    fetchCustomerData();
+  }, []);
 
   const [paymentMethod, setPaymentMethod] = useState('payhere');
   const [billingOption, setBillingOption] = useState('same');
   const [newsletter, setNewsletter] = useState(false);
   const [discountCode, setDiscountCode] = useState('');
   
-  // Address State
-  const [addresses, setAddresses] = useState<Address[]>(MOCK_ADDRESSES);
-  const [selectedAddress, setSelectedAddress] = useState<Address>(addresses[0]);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [isAddAddressModalOpen, setIsAddAddressModalOpen] = useState(false);
 
@@ -53,6 +62,13 @@ function CheckoutContent() {
   const [addrPostal, setAddrPostal] = useState('');
   const [addrPhone, setAddrPhone] = useState('');
   const [addrDefault, setAddrDefault] = useState(false);
+
+  const isBuyNow = searchParams.get('buyNow') === 'true';
+  const buyNowId = searchParams.get('id');
+  const buyNowQty = parseInt(searchParams.get('qty') || '1');
+  const buyNowSize = searchParams.get('size') || '';
+  const buyNowColor = searchParams.get('color') || '';
+  const buyNowColorHex = searchParams.get('colorHex') || '';
 
   // Determine items to display
   let displayItems: CartItem[] = [];
@@ -78,7 +94,10 @@ function CheckoutContent() {
   const total = subtotal + shippingFee;
 
   const handlePayNow = () => {
-    alert(`Processing payment of ${formatPrice(total)} via ${paymentMethod}...\nShipping to: ${selectedAddress.name}, ${selectedAddress.line1}`);
+    const addrText = selectedAddress
+      ? `${selectedAddress.full_name}, ${selectedAddress.line1}`
+      : 'No address selected';
+    alert(`Processing payment of ${formatPrice(total)} via ${paymentMethod}...\nShipping to: ${addrText}`);
   };
 
   const handleApplyDiscount = () => {
@@ -87,28 +106,34 @@ function CheckoutContent() {
     }
   };
 
-  const handleSaveNewAddress = (e: React.FormEvent) => {
+  const handleSaveNewAddress = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newAddr: Address = {
-      id: `addr_${Date.now()}`,
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const payload = {
+      customer_id: user.id,
       label: addrDefault ? 'Home' : 'Other',
-      name: `${addrFirst} ${addrLast}`.trim(),
+      full_name: `${addrFirst} ${addrLast}`.trim(),
       line1: addrLine + (addrApt ? `, ${addrApt}` : ''),
       city: addrCity,
-      state: '',
-      pincode: addrPostal,
+      postal_code: addrPostal,
       phone: addrPhone,
-      isDefault: addrDefault,
+      is_default: addrDefault,
     };
-    
-    setAddresses(prev => [...prev, newAddr]);
-    setSelectedAddress(newAddr);
+    if (addrDefault) await supabase.from('addresses').update({ is_default: false }).eq('customer_id', user.id);
+    const { data } = await supabase.from('addresses').insert([payload]).select().single();
+    if (data) {
+      setAddresses(prev => [data, ...(addrDefault ? prev.map(a => ({...a, is_default: false})) : prev)]);
+      setSelectedAddress(data);
+    }
     setIsAddAddressModalOpen(false);
-    
-    // Reset form
     setAddrFirst(''); setAddrLast(''); setAddrLine(''); setAddrApt('');
     setAddrCity(''); setAddrPostal(''); setAddrPhone(''); setAddrDefault(false);
   };
+
+  if (loadingUser) {
+    return <div style={{ padding: '100px', textAlign: 'center' }}>Loading your details...</div>;
+  }
 
   if (displayItems.length === 0) {
     return (
@@ -129,8 +154,10 @@ function CheckoutContent() {
           {/* Email Section */}
           <div className={styles.section}>
             <div className={styles.emailRow}>
-              <div className={styles.avatarCircle}>T</div>
-              <div className={styles.emailText}>p.thayayuthan06@gmail.com</div>
+              <div className={styles.avatarCircle}>
+                {(customer?.full_name || customer?.email || 'U')[0].toUpperCase()}
+              </div>
+              <div className={styles.emailText}>{customer?.email || '—'}</div>
             </div>
           </div>
 
@@ -139,23 +166,29 @@ function CheckoutContent() {
             <div className={styles.sectionHeader} onClick={() => setIsAddressModalOpen(true)}>
               <span className={styles.sectionTitle}>Ship to</span>
             </div>
-            <div className={styles.addressBox} onClick={() => setIsAddressModalOpen(true)} style={{ cursor: 'pointer' }}>
-              <div>
-                <div className={styles.addressText}>
-                  {selectedAddress.name}, {selectedAddress.line1},<br />
-                  {selectedAddress.city}, {selectedAddress.pincode},<br />
-                  {selectedAddress.state || 'LK'}
+            {selectedAddress ? (
+              <div className={styles.addressBox} onClick={() => setIsAddressModalOpen(true)} style={{ cursor: 'pointer' }}>
+                <div>
+                  <div className={styles.addressText}>
+                    {selectedAddress.full_name}, {selectedAddress.line1},<br />
+                    {selectedAddress.city}, {selectedAddress.postal_code},<br />
+                    Sri Lanka
+                  </div>
+                  {selectedAddress.is_default && <div className={styles.defaultBadge}>Default</div>}
                 </div>
-                {selectedAddress.isDefault && <div className={styles.defaultBadge}>Default</div>}
+                <div className={styles.menuDots}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="5" r="1"></circle>
+                    <circle cx="12" cy="12" r="1"></circle>
+                    <circle cx="12" cy="19" r="1"></circle>
+                  </svg>
+                </div>
               </div>
-              <div className={styles.menuDots}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="5" r="1"></circle>
-                  <circle cx="12" cy="12" r="1"></circle>
-                  <circle cx="12" cy="19" r="1"></circle>
-                </svg>
+            ) : (
+              <div style={{ padding: '16px', border: '1px dashed #ddd', borderRadius: '8px', color: '#999', fontSize: '14px' }}>
+                No address saved. Add one below.
               </div>
-            </div>
+            )}
             <a href="#" className={styles.addAddress} onClick={(e) => { e.preventDefault(); setIsAddAddressModalOpen(true); }}>
               <span className={styles.plusIcon}>+</span>
               <span>Use a different address</span>
@@ -360,7 +393,7 @@ function CheckoutContent() {
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {addresses.map((addr) => (
+              {addresses.map((addr: any) => (
                 <div 
                   key={addr.id}
                   onClick={() => {
@@ -369,20 +402,20 @@ function CheckoutContent() {
                   }}
                   style={{
                     padding: '16px',
-                    border: `1px solid ${selectedAddress.id === addr.id ? '#1a1a1a' : '#e5e5e5'}`,
+                    border: `1px solid ${selectedAddress?.id === addr.id ? '#1a1a1a' : '#e5e5e5'}`,
                     borderRadius: '8px',
                     cursor: 'pointer',
-                    backgroundColor: selectedAddress.id === addr.id ? '#fafafa' : '#fff',
+                    backgroundColor: selectedAddress?.id === addr.id ? '#fafafa' : '#fff',
                     transition: 'all 0.2s'
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                     <span style={{ fontWeight: 600, fontSize: '14px' }}>{addr.label}</span>
-                    {addr.isDefault && <span style={{ fontSize: '10px', background: '#1a1a1a', color: '#fff', padding: '2px 6px', borderRadius: '4px' }}>DEFAULT</span>}
+                    {addr.is_default && <span style={{ fontSize: '10px', background: '#1a1a1a', color: '#fff', padding: '2px 6px', borderRadius: '4px' }}>DEFAULT</span>}
                   </div>
-                  <div style={{ fontSize: '14px', color: '#1a1a1a' }}>{addr.name}</div>
+                  <div style={{ fontSize: '14px', color: '#1a1a1a' }}>{addr.full_name}</div>
                   <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '2px' }}>
-                    {addr.line1}, {addr.city}, {addr.pincode}
+                    {addr.line1}, {addr.city}, {addr.postal_code}
                   </div>
                 </div>
               ))}

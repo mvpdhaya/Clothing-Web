@@ -4,43 +4,14 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useDbStore } from '@/store/dbStore';
-import { Address, User, Order } from '@/types/store';
 
-const LOCAL_USER: User = {
-  id: 'usr_1',
-  name: 'Dhaya Panchalingam',
-  email: 'dhaya@example.com',
-  phone: '0771234567',
-  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&q=80',
-};
+import { supabase } from '@/lib/supabase/client';
 
-const LOCAL_ADDRESSES: Address[] = [
-  {
-    id: 'addr_1',
-    label: 'Home',
-    name: 'Dhaya Panchalingam',
-    line1: '123, Galle Road',
-    city: 'Colombo 03',
-    state: 'Western',
-    pincode: '00300',
-    phone: '0771234567',
-    isDefault: true,
-  }
-];
 
-const LOCAL_ORDERS: Order[] = [
-  {
-    id: 'ORD-8947-1',
-    date: '18 May 2026',
-    total: 3500,
-    status: 'Delivered',
-    items: [
-      { productId: '2', quantity: 1, size: 'M', color: 'Black' }
-    ],
-    addressId: 'addr_1',
-    paymentMethod: 'Visa',
-  }
-];
+
+
+
+
 
 /* ─── tiny icon helpers ─── */
 const EditIcon = () => (
@@ -77,22 +48,64 @@ function ProfileContent() {
   const queryTab = searchParams.get('tab') as Tab | null;
   const allProducts = useDbStore((state) => state.products);
 
-  const [activeTab, setActiveTab] = useState<Tab>(queryTab || 'profile');
+    const [activeTab, setActiveTab] = useState<Tab>(queryTab || 'profile');
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showAddAddress, setShowAddAddress] = useState(false);
-  const [userName, setUserName] = useState(LOCAL_USER.name);
-  const [addresses, setAddresses] = useState<Address[]>(LOCAL_ADDRESSES);
-  const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [customer, setCustomer] = useState<any>(null);
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [editingAddress, setEditingAddress] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    async function loadData() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/login');
+        return;
+      }
+      setUser(user);
+
+      const { data: custData } = await supabase.from('customers').select('*').eq('id', user.id).maybeSingle();
+      if (custData) {
+        setCustomer(custData);
+        const names = (custData.full_name || '').split(' ');
+        setEditFirst(names[0] || '');
+        setEditLast(names.slice(1).join(' ') || '');
+      } else {
+        // Fallback for users created before our Database Trigger existed
+        const metaName = user.user_metadata?.name || user.user_metadata?.full_name || '';
+        const names = metaName.split(' ');
+        setCustomer({ full_name: metaName });
+        setEditFirst(names[0] || '');
+        setEditLast(names.slice(1).join(' ') || '');
+      }
+      
+      const { data: addrData } = await supabase.from('addresses').select('*').eq('customer_id', user.id).order('created_at', { ascending: false });
+      if (addrData) setAddresses(addrData);
+
+      const { data: ordersData } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('customer_id', user.id)
+        .order('created_at', { ascending: false });
+      if (ordersData) setOrders(ordersData);
+      
+      setLoading(false);
+    }
+    loadData();
+  }, [router]);
+
+    useEffect(() => {
     if (queryTab && (queryTab === 'profile' || queryTab === 'orders')) {
       setActiveTab(queryTab);
     }
   }, [queryTab]);
 
   /* edit profile form state */
-  const [editFirst, setEditFirst] = useState(userName.split(' ')[0] ?? '');
-  const [editLast, setEditLast] = useState(userName.split(' ')[1] ?? '');
+  const [editFirst, setEditFirst] = useState('');
+  const [editLast, setEditLast] = useState('');
   const [editNewsOffers, setEditNewsOffers] = useState(false);
 
   /* add address form state */
@@ -105,35 +118,42 @@ function ProfileContent() {
   const [addrPhone, setAddrPhone] = useState('');
   const [addrDefault, setAddrDefault] = useState(false);
 
-  const saveProfile = (e: React.FormEvent) => {
+  const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    setUserName(`${editFirst} ${editLast}`.trim());
+    if (!user) return;
+    const fullName = `${editFirst} ${editLast}`.trim();
+    const { data } = await supabase.from('customers').update({ full_name: fullName }).eq('id', user.id).select().single();
+    if (data) setCustomer(data);
     setShowEditProfile(false);
   };
 
-  const saveAddress = (e: React.FormEvent) => {
+  const saveAddress = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
     const payload = {
+      customer_id: user.id,
       label: addrDefault ? 'Home' : 'Other',
-      name: `${addrFirst} ${addrLast}`.trim(),
+      full_name: `${addrFirst} ${addrLast}`.trim(),
+      phone: addrPhone,
       line1: addrLine + (addrApt ? `, ${addrApt}` : ''),
       city: addrCity,
-      state: '',
-      pincode: addrPostal,
-      phone: addrPhone,
-      isDefault: addrDefault,
+      postal_code: addrPostal,
+      is_default: addrDefault,
     };
 
     if (editingAddress) {
-      setAddresses(prev => prev.map(a => a.id === editingAddress.id ? { ...a, ...payload } : a));
+      if (addrDefault) await supabase.from('addresses').update({ is_default: false }).eq('customer_id', user.id);
+      const { data } = await supabase.from('addresses').update(payload).eq('id', editingAddress.id).select().single();
+      if (data) {
+        setAddresses(prev => prev.map(a => a.id === editingAddress.id ? data : (addrDefault ? { ...a, is_default: false } : a)));
+      }
     } else {
-      const newAddr: Address = {
-        id: `addr_${Date.now()}`,
-        ...payload,
-      };
-      setAddresses(prev => [...prev, newAddr]);
+      if (addrDefault) await supabase.from('addresses').update({ is_default: false }).eq('customer_id', user.id);
+      const { data } = await supabase.from('addresses').insert([payload]).select().single();
+      if (data) {
+        setAddresses(prev => [data, ...(addrDefault ? prev.map(a => ({...a, is_default: false})) : prev)]);
+      }
     }
-    /* reset */
     closeAddressModal();
   };
 
@@ -144,22 +164,23 @@ function ProfileContent() {
     setEditingAddress(null);
   };
 
-  const startEditAddress = (addr: Address) => {
+  const startEditAddress = (addr: any) => {
     setEditingAddress(addr);
-    const names = addr.name.split(' ');
+    const names = (addr.full_name || '').split(' ');
     setAddrFirst(names[0] || '');
     setAddrLast(names.slice(1).join(' ') || '');
-    const lines = addr.line1.split(', ');
+    const lines = (addr.line1 || '').split(', ');
     setAddrLine(lines[0] || '');
     setAddrApt(lines[1] || '');
-    setAddrCity(addr.city);
-    setAddrPostal(addr.pincode);
-    setAddrPhone(addr.phone);
-    setAddrDefault(addr.isDefault);
+    setAddrCity(addr.city || '');
+    setAddrPostal(addr.postal_code || '');
+    setAddrPhone(addr.phone || '');
+    setAddrDefault(addr.is_default || false);
     setShowAddAddress(true);
   };
 
-  const removeAddress = (id: string) => {
+  const removeAddress = async (id: string) => {
+    await supabase.from('addresses').delete().eq('id', id);
     setAddresses(prev => prev.filter(a => a.id !== id));
   };
 
@@ -201,7 +222,7 @@ function ProfileContent() {
                 <label className="block text-xs text-[#888] mb-1.5">Email</label>
                 <input
                   type="email"
-                  value={LOCAL_USER.email}
+                  value={user?.email || ''}
                   readOnly
                   className="w-full px-4 py-3.5 border border-[#ddd] rounded-lg text-[15px] outline-none bg-[#fafafa] text-gray-500"
                 />
@@ -365,6 +386,7 @@ function ProfileContent() {
 
 
         {/* ── MAIN ── */}
+        {loading ? <div className='py-20 text-center text-gray-500'>Loading profile...</div> : (
         <div className="max-w-[1100px] mx-auto px-5 sm:px-10 md:px-20 pt-12 pb-20">
 
           {/* ── PROFILE TAB ── */}
@@ -378,7 +400,7 @@ function ProfileContent() {
                   <div className="flex items-center gap-2">
                     <div>
                       <span className="block text-[14px] text-[#888] mb-1">Name</span>
-                      <span className="text-[15px] text-black">{userName || '—'}</span>
+                      <span className="text-[15px] text-black">{customer?.full_name || '—'}</span>
                     </div>
                     <button
                       onClick={() => setShowEditProfile(true)}
@@ -390,7 +412,7 @@ function ProfileContent() {
                 </div>
                 <div className="py-2.5 mt-3">
                   <span className="block text-[14px] text-[#888] mb-1">Email</span>
-                  <span className="text-[15px] text-black">{LOCAL_USER.email}</span>
+                  <span className="text-[15px] text-black">{user?.email || ''}</span>
                 </div>
               </div>
 
@@ -418,13 +440,13 @@ function ProfileContent() {
                         <div className="text-[14px] leading-relaxed text-[#333]">
                           <div className="font-semibold text-black mb-1 flex items-center gap-2">
                             {addr.label}
-                            {addr.isDefault && (
+                            {addr.is_default && (
                               <span className="text-[10px] bg-black text-white px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">Default</span>
                             )}
                           </div>
-                          <div className="font-medium text-black">{addr.name}</div>
+                          <div className="font-medium text-black">{addr.full_name}</div>
                           <div className="text-[#666]">{addr.line1}</div>
-                          <div className="text-[#666]">{addr.city}{addr.pincode ? `, ${addr.pincode}` : ''}</div>
+                          <div className="text-[#666]">{addr.city}{addr.postal_code ? `, ${addr.postal_code}` : ''}</div>
                           {addr.phone && <div className="text-[#666] mt-1 text-[13px] italic">{addr.phone}</div>}
                         </div>
                         <div className="flex flex-col gap-2 pt-1">
@@ -466,14 +488,20 @@ function ProfileContent() {
             <div>
               <h1 className="text-[28px] font-semibold mb-8">Orders</h1>
 
-              {LOCAL_ORDERS.length === 0 ? (
+              {orders.length === 0 ? (
                 <div className="border border-[#eee] rounded-xl py-16 text-center">
                   <h3 className="text-[18px] font-semibold mb-2">No orders yet</h3>
                   <p className="text-[15px] text-[#666]">Go to store to place an order.</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
-                  {LOCAL_ORDERS.map(order => (
+                  {orders.map(order => {
+                    const itemsArr: any[] = Array.isArray(order.items) ? order.items : [];
+                    const orderDate = order.created_at
+                      ? new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                      : '—';
+                    const orderTotal = order.total_amount ?? order.total ?? 0;
+                    return (
                     <div key={order.id} className="border border-[#eee] rounded-xl overflow-hidden hover:shadow-md transition-shadow">
                       {/* header row */}
                       <div className="flex flex-wrap items-start sm:items-center justify-between gap-4 px-4 sm:px-6 py-4 bg-[#fafafa] border-b border-[#eee]">
@@ -484,47 +512,67 @@ function ProfileContent() {
                           </div>
                           <div>
                             <p className="text-[10px] font-bold tracking-widest uppercase text-[#888] mb-0.5">Date</p>
-                            <p className="font-semibold text-black">{order.date}</p>
+                            <p className="font-semibold text-black">{orderDate}</p>
                           </div>
                           <div>
                             <p className="text-[10px] font-bold tracking-widest uppercase text-[#888] mb-0.5">Total</p>
-                            <p className="font-bold text-black">Rs {order.total.toLocaleString()}</p>
+                            <p className="font-bold text-black">Rs {Number(orderTotal).toLocaleString()}</p>
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold tracking-widest uppercase text-[#888] mb-0.5">Items</p>
-                            <p className="font-semibold text-black">{order.items.length} item{order.items.length !== 1 ? 's' : ''}</p>
+                            <p className="text-[10px] font-bold tracking-widest uppercase text-[#888] mb-0.5">Status</p>
+                            <p className="font-semibold text-black">{order.status ?? '—'}</p>
                           </div>
+                          {itemsArr.length > 0 && (
+                            <div>
+                              <p className="text-[10px] font-bold tracking-widest uppercase text-[#888] mb-0.5">Items</p>
+                              <p className="font-semibold text-black">{itemsArr.length} item{itemsArr.length !== 1 ? 's' : ''}</p>
+                            </div>
+                          )}
                         </div>
+                        <Link
+                          href={`/orders/${order.id}`}
+                          className="text-[12px] font-medium text-black underline underline-offset-2 hover:opacity-60 transition-opacity"
+                        >
+                          View details
+                        </Link>
                       </div>
-                      {/* Ordered Images */}
-                      <div className="px-4 sm:px-6 py-4 flex flex-wrap gap-4 border-t border-[#f5f5f5] bg-white">
-                        {order.items.slice(0, 5).map((item, idx) => {
-                          const product = allProducts.find(p => p.id === item.productId);
-                          if (!product) return null;
-                          return (
-                            <Link 
-                              key={idx} 
-                              href={`/product/${product.name.toLowerCase().replace(/ /g, '-')}`} 
-                              className="block relative w-16 h-20 rounded-xl overflow-hidden bg-white border border-[#eee] transition-all hover:scale-105 hover:shadow-md"
-                            >
-                              <img src={product.images[0]} alt="" className="object-cover w-full h-full" />
+                      {/* Items preview */}
+                      {itemsArr.length > 0 && (
+                        <div className="px-4 sm:px-6 py-4 flex flex-wrap gap-4 border-t border-[#f5f5f5] bg-white">
+                          {itemsArr.slice(0, 5).map((item: any, idx: number) => {
+                            const product = allProducts.find(p => p.id === item.productId || p.id === item.product_id);
+                            if (!product) return (
+                              <div key={idx} className="w-16 h-20 rounded-xl bg-[#f5f5f5] border border-[#eee] flex items-center justify-center text-[10px] text-[#999]">
+                                Item
+                              </div>
+                            );
+                            return (
+                              <Link
+                                key={idx}
+                                href={`/product/${product.name.toLowerCase().replace(/ /g, '-')}`}
+                                className="block relative w-16 h-20 rounded-xl overflow-hidden bg-white border border-[#eee] transition-all hover:scale-105 hover:shadow-md"
+                              >
+                                <img src={product.images[0]} alt="" className="object-cover w-full h-full" />
+                              </Link>
+                            );
+                          })}
+                          {itemsArr.length > 5 && (
+                            <Link href={`/orders/${order.id}`} className="w-16 h-20 flex flex-col items-center justify-center bg-[#fafafa] border border-[#eee] rounded-xl text-[11px] font-bold text-[#999] hover:bg-gray-100 transition-colors">
+                              <span>+{itemsArr.length - 5}</span>
+                              <span className="text-[9px] uppercase tracking-tighter">More</span>
                             </Link>
-                          );
-                        })}
-                        {order.items.length > 5 && (
-                          <Link href={`/orders/${order.id}`} className="w-16 h-20 flex flex-col items-center justify-center bg-[#fafafa] border border-[#eee] rounded-xl text-[11px] font-bold text-[#999] hover:bg-gray-100 transition-colors">
-                            <span>+{order.items.length - 5}</span>
-                            <span className="text-[9px] uppercase tracking-tighter">More</span>
-                          </Link>
-                        )}
-                      </div>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
           )}
         </div>
+          )}
       </div>
 
       {/* ── FOOTER LINKS ── */}

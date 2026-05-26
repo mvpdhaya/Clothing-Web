@@ -106,17 +106,14 @@ export default function ProductDetailPage() {
       return;
     }
     const colorObj = product.colors.find(c => c.name === selectedColor) || product.colors[0];
-    // Optional: still add to cart if you want the item persisted, 
-    // but the checkout will focus on this single item.
-    // addToCart(product, qty, selectedSize, colorObj); 
     
     const params = new URLSearchParams({
       buyNow: 'true',
       id: product.id,
       qty: qty.toString(),
       size: selectedSize,
-      color: colorObj.name,
-      colorHex: colorObj.hex
+      color: colorObj?.name ?? '',
+      colorHex: colorObj?.hex ?? ''
     });
     router.push(`/checkout?${params.toString()}`);
   };
