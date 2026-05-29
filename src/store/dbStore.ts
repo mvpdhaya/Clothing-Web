@@ -35,6 +35,8 @@ export interface HomepageSection {
   grid?: {
     source: string;
     selectedProducts: string[];
+    selectedSubcategories: string[];
+    description: string;
     itemCount: number;
   };
 }
@@ -246,9 +248,18 @@ export const useDbStore = create<DbState>((set, get) => ({
           if (type === 'products') {
             const pg = (gridsRes || []).find((g: any) => g.section_id === sec.id);
             if (pg) {
+              const rawProducts = pg.selected_products;
+              const rawSubs = pg.selected_subcategories || pg.selected_subcategory;
+              
               gridData = {
                 source: pg.source || 'manual',
-                selectedProducts: Array.isArray(pg.selected_products) ? pg.selected_products : [],
+                selectedProducts: Array.isArray(rawProducts) 
+                  ? rawProducts 
+                  : (typeof rawProducts === 'string' ? rawProducts.split(',').map(s => s.trim()) : []),
+                selectedSubcategories: Array.isArray(rawSubs) 
+                  ? rawSubs 
+                  : (typeof rawSubs === 'string' ? rawSubs.split(',').map(s => s.trim()) : []),
+                description: pg.description || '',
                 itemCount: Number(pg.item_count) || 8
               };
             }

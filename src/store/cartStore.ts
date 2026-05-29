@@ -12,8 +12,8 @@ export interface CartItem {
 interface CartState {
   cart: CartItem[];
   addToCart: (product: Product, quantity: number, size: string, color: { name: string; hex: string }) => void;
-  removeFromCart: (productId: string, size: string, hex: string) => void;
-  updateCartQuantity: (productId: string, size: string, hex: string, delta: number) => void;
+  removeFromCart: (productId: string, size: string, hex: string | undefined) => void;
+  updateCartQuantity: (productId: string, size: string, hex: string | undefined, delta: number) => void;
   clearCart: () => void;
   cartTotal: () => number;
   cartCount: () => number;
@@ -24,29 +24,30 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       cart: [],
       addToCart: (product, quantity, size, color) => {
+        const selectedColor = color || { name: 'Default', hex: '' };
         set((state) => {
           const idx = state.cart.findIndex(
-            (i) => i.product.id === product.id && i.selectedSize === size && i.selectedColor.hex === color.hex
+            (i) => i.product.id === product.id && i.selectedSize === size && i.selectedColor?.hex === selectedColor.hex
           );
           if (idx > -1) {
             const next = [...state.cart];
             next[idx] = { ...next[idx], quantity: next[idx].quantity + quantity };
             return { cart: next };
           }
-          return { cart: [...state.cart, { product, quantity, selectedSize: size, selectedColor: color }] };
+          return { cart: [...state.cart, { product, quantity, selectedSize: size, selectedColor }] };
         });
       },
       removeFromCart: (productId, size, hex) => {
         set((state) => ({
           cart: state.cart.filter(
-            (i) => !(i.product.id === productId && i.selectedSize === size && i.selectedColor.hex === hex)
+            (i) => !(i.product.id === productId && i.selectedSize === size && (i.selectedColor?.hex || '') === (hex || ''))
           ),
         }));
       },
       updateCartQuantity: (productId, size, hex, delta) => {
         set((state) => ({
           cart: state.cart.map((i) =>
-            i.product.id === productId && i.selectedSize === size && i.selectedColor.hex === hex
+            i.product.id === productId && i.selectedSize === size && (i.selectedColor?.hex || '') === (hex || '')
               ? { ...i, quantity: Math.max(1, i.quantity + delta) }
               : i
           ),

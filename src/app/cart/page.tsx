@@ -8,6 +8,8 @@ import { useDbStore } from '@/store/dbStore';
 import ProductCardHome from '@/components/store/ProductCardHome';
 import { formatPrice } from '@/lib/utils';
 import { Truck, ChevronLeft, ChevronRight } from 'lucide-react';
+import { supabase } from '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
 
 const CartPage: React.FC = () => {
   const { cart, removeFromCart, updateCartQuantity, cartTotal } = useCartStore();
@@ -16,6 +18,7 @@ const CartPage: React.FC = () => {
   
   const allProducts = useDbStore((state) => state.products);
   const storeSettings = useDbStore((state) => state.storeSettings);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -23,6 +26,15 @@ const CartPage: React.FC = () => {
 
   // Recommendation products - using first 8 from database
   const recProducts = useMemo(() => allProducts.slice(0, 8), [allProducts]);
+
+  const handleCheckout = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      router.push('/login');
+    } else {
+      router.push('/checkout');
+    }
+  };
 
 
   const handleScroll = (direction: 'left' | 'right') => {
@@ -158,12 +170,12 @@ const CartPage: React.FC = () => {
 
               <div className="text-xs text-gray-400 mb-5 mt-2">Taxes calculated at checkout</div>
 
-              <Link 
-                href="/checkout"
-                className="block w-full text-center py-4 bg-gray-800 text-white border-none text-[13px] font-semibold tracking-[1.5px] uppercase rounded hover:bg-gray-700 transition-colors"
+              <button 
+                onClick={handleCheckout}
+                className="block w-full text-center py-4 bg-gray-800 text-white border-none text-[13px] font-semibold tracking-[1.5px] uppercase rounded hover:bg-gray-700 transition-colors cursor-pointer"
               >
                 Check Out
-              </Link>
+              </button>
             </aside>
           )}
         </div>

@@ -39,6 +39,9 @@ function CheckoutContent() {
       if (addrData && addrData.length > 0) {
         setAddresses(addrData);
         setSelectedAddress(addrData.find((a: any) => a.is_default) || addrData[0]);
+      } else if (user) {
+        // Automatically open add address modal if no address exists
+        setIsAddAddressModalOpen(true);
       }
       setLoadingUser(false);
     }
@@ -94,6 +97,10 @@ function CheckoutContent() {
   const total = subtotal + shippingFee;
 
   const handlePayNow = () => {
+    if (!selectedAddress) {
+      alert('Please select or add a shipping address before proceeding.');
+      return;
+    }
     const addrText = selectedAddress
       ? `${selectedAddress.full_name}, ${selectedAddress.line1}`
       : 'No address selected';
@@ -291,7 +298,13 @@ function CheckoutContent() {
           </div>
 
           {/* Pay Button */}
-          <button className={styles.payButton} onClick={handlePayNow}>Pay now</button>
+          <button 
+            className={`${styles.payButton} ${!selectedAddress ? styles.payButtonDisabled : ''}`} 
+            onClick={handlePayNow}
+            disabled={!selectedAddress}
+          >
+            {selectedAddress ? 'Pay now' : 'Select an address to continue'}
+          </button>
 
           {/* Footer Links */}
           <div className={styles.footerLinks}>

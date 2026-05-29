@@ -127,7 +127,7 @@ const ProductCarousel: React.FC<{
         <div className="flex items-center justify-between mb-6 sm:mb-10 md:px-[60px]">
           <div>
             <h2 className="text-xl sm:text-3xl font-semibold text-gray-800 uppercase tracking-wide">{title}</h2>
-            <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
+            {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
           </div>
           <Link
             href="/products"
@@ -427,8 +427,17 @@ export default function App() {
               let sectionProducts: Product[] = [];
               if (section.grid) {
                 const grid = section.grid;
-                if (grid.source === 'manual') {
+                
+                // Prioritize explicit products or subcategories regardless of source
+                if (grid.selectedProducts && grid.selectedProducts.length > 0) {
                   sectionProducts = products.filter(p => grid.selectedProducts.includes(p.id));
+                } else if (grid.selectedSubcategories && grid.selectedSubcategories.length > 0) {
+                  // Filter by subcategory (matching case-insensitive and normalized)
+                  const selectedSubs = grid.selectedSubcategories.map(s => s.toLowerCase());
+                  sectionProducts = products.filter(p => 
+                    selectedSubs.includes(p.subcategory.toLowerCase()) ||
+                    selectedSubs.includes(p.subcategory.replace('-', ' ').toLowerCase())
+                  );
                 } else if (grid.source === 'new') {
                   sectionProducts = products.filter(p => p.isNew).slice(0, grid.itemCount);
                 } else if (grid.source === 'sale') {
@@ -436,7 +445,7 @@ export default function App() {
                 } else if (grid.source === 'flash') {
                   sectionProducts = products.filter(p => p.isFlashSale).slice(0, grid.itemCount);
                 } else {
-                  // Unknown source — show all products up to itemCount
+                  // Unknown source or manual with no selections — show all products up to itemCount
                   sectionProducts = products.slice(0, grid.itemCount || 8);
                 }
               } else {
@@ -447,7 +456,7 @@ export default function App() {
                 <ProductCarousel
                   key={section.id}
                   title={section.name}
-                  subtitle="Curated selection just for you"
+                  subtitle={section.grid?.description || ""}
                   products={sectionProducts}
                   sectionKey={section.id}
                 />

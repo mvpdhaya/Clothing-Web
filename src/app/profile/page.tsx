@@ -62,7 +62,7 @@ function ProfileContent() {
     async function loadData() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        router.push('/login');
+        router.replace('/login');
         return;
       }
       setUser(user);
@@ -118,13 +118,9 @@ function ProfileContent() {
   const [addrPhone, setAddrPhone] = useState('');
   const [addrDefault, setAddrDefault] = useState(false);
 
-  const saveProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-    const fullName = `${editFirst} ${editLast}`.trim();
-    const { data } = await supabase.from('customers').update({ full_name: fullName }).eq('id', user.id).select().single();
-    if (data) setCustomer(data);
-    setShowEditProfile(false);
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
   };
 
   const saveAddress = async (e: React.FormEvent) => {
@@ -177,6 +173,15 @@ function ProfileContent() {
     setAddrPhone(addr.phone || '');
     setAddrDefault(addr.is_default || false);
     setShowAddAddress(true);
+  };
+
+  const saveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    const fullName = `${editFirst} ${editLast}`.trim();
+    const { data } = await supabase.from('customers').update({ full_name: fullName }).eq('id', user.id).select().single();
+    if (data) setCustomer(data);
+    setShowEditProfile(false);
   };
 
   const removeAddress = async (id: string) => {
@@ -473,12 +478,12 @@ function ProfileContent() {
 
               {/* Sign out */}
               <div className="mt-8">
-                <Link
-                  href="/login"
-                  className="inline-block px-5 py-2.5 border border-[#ccc] rounded-lg bg-white text-[14px] text-black hover:bg-[#f5f5f5] transition-colors"
+                <button
+                  onClick={handleSignOut}
+                  className="inline-block px-5 py-2.5 border border-[#ccc] rounded-lg bg-white text-[14px] text-black hover:bg-[#f5f5f5] transition-colors cursor-pointer"
                 >
                   Sign out
-                </Link>
+                </button>
               </div>
             </div>
           )}

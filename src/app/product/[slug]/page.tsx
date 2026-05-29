@@ -11,6 +11,7 @@ import ProductCardHome from '@/components/store/ProductCardHome';
 import { useCartStore } from '@/store/cartStore';
 import { cn, formatPrice } from '@/lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { supabase } from '@/lib/supabase/client';
 
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -96,16 +97,22 @@ export default function ProductDetailPage() {
       setSizeError(true);
       return;
     }
-    const colorObj = product.colors.find(c => c.name === selectedColor) || product.colors[0];
+    const colorObj = product.colors.find(c => c.name === selectedColor) || product.colors[0] || { name: 'Default', hex: '' };
     addToCart(product, qty, selectedSize, colorObj);
   };
 
-  const handleBuyNow = () => {
+  const handleBuyNow = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
     if (product.sizes.length > 0 && !selectedSize) {
       setSizeError(true);
       return;
     }
-    const colorObj = product.colors.find(c => c.name === selectedColor) || product.colors[0];
+    const colorObj = product.colors.find(c => c.name === selectedColor) || product.colors[0] || { name: 'Default', hex: '' };
     
     const params = new URLSearchParams({
       buyNow: 'true',
