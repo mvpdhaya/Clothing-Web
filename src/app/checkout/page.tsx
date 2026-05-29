@@ -12,6 +12,7 @@ function CheckoutContent() {
   const searchParams = useSearchParams();
   const { cart, cartTotal } = useCartStore();
   const allProducts = useDbStore((state) => state.products);
+  const storeSettings = useDbStore((state) => state.storeSettings);
 
   const [customer, setCustomer] = useState<any>(null);
   const [addresses, setAddresses] = useState<any[]>([]);
@@ -48,10 +49,17 @@ function CheckoutContent() {
     fetchCustomerData();
   }, []);
 
-  const [paymentMethod, setPaymentMethod] = useState('payhere');
+  const [paymentMethod, setPaymentMethod] = useState('');
   const [billingOption, setBillingOption] = useState('same');
-  const [newsletter, setNewsletter] = useState(false);
   const [discountCode, setDiscountCode] = useState('');
+
+  // Set default payment method when storeSettings load
+  useEffect(() => {
+    if (storeSettings?.paymentMethods) {
+      const firstActive = storeSettings.paymentMethods.find(m => m.active);
+      if (firstActive) setPaymentMethod(firstActive.name);
+    }
+  }, [storeSettings]);
   
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [isAddAddressModalOpen, setIsAddAddressModalOpen] = useState(false);
@@ -220,45 +228,44 @@ function CheckoutContent() {
             <div className={styles.secureText}>All transactions are secure and encrypted.</div>
             
             <div className={styles.paymentOptions}>
-              <div 
-                className={`${styles.paymentOption} ${paymentMethod === 'payhere' ? styles.paymentOptionSelected : ''}`}
-                onClick={() => setPaymentMethod('payhere')}
-              >
-                <div className={`${styles.paymentRadio} ${paymentMethod === 'payhere' ? styles.paymentRadioChecked : styles.paymentRadioUnchecked}`}></div>
-                <div className={styles.paymentLabel}>Bank Card / Bank Account - PayHere</div>
-                <div className={styles.cardIcons}>
-                  <svg className={styles.cardIcon} viewBox="0 0 48 32" fill="none">
-                    <rect width="48" height="32" rx="4" fill="white" stroke="#e5e5e5" />
-                    <text x="8" y="20" fontFamily="Arial" fontSize="10" fontWeight="bold" fill="#1a1f71">VISA</text>
-                  </svg>
-                  <svg className={styles.cardIcon} viewBox="0 0 48 32" fill="none">
-                    <rect width="48" height="32" rx="4" fill="white" stroke="#e5e5e5" />
-                    <circle cx="22" cy="16" r="8" fill="#eb001b" opacity="0.8" />
-                    <circle cx="30" cy="16" r="8" fill="#f79e1b" opacity="0.8" />
-                  </svg>
-                  <svg className={styles.cardIcon} viewBox="0 0 48 32" fill="none">
-                    <rect width="48" height="32" rx="4" fill="white" stroke="#e5e5e5" />
-                    <text x="6" y="20" fontFamily="Arial" fontSize="8" fontWeight="bold" fill="#006fcf">AMEX</text>
-                  </svg>
-                  <span className={styles.plusMore}>+2</span>
-                </div>
-              </div>
-              {paymentMethod === 'payhere' && (
-                <div className={styles.paymentDescription}>
-                  You'll be redirected to Bank Card / Bank Account - PayHere to complete<br />your purchase.
-                </div>
-              )}
-              
-              <div 
-                className={`${styles.paymentOption} ${paymentMethod === 'cod' ? styles.paymentOptionSelected : ''}`}
-                onClick={() => setPaymentMethod('cod')}
-              >
-                <div className={`${styles.paymentRadio} ${paymentMethod === 'cod' ? styles.paymentRadioChecked : styles.paymentRadioUnchecked}`}></div>
-                <div className={styles.paymentLabel}>Cash on Delivery (COD)</div>
-              </div>
-              {paymentMethod === 'cod' && (
-                <div className={styles.paymentDescription}>
-                  Pay for your order when it arrives at your doorstep!
+              {storeSettings?.paymentMethods?.filter(m => m.active).map((method, index) => (
+                <React.Fragment key={method.name}>
+                  <div 
+                    className={`${styles.paymentOption} ${paymentMethod === method.name ? styles.paymentOptionSelected : ''}`}
+                    onClick={() => setPaymentMethod(method.name)}
+                  >
+                    <div className={`${styles.paymentRadio} ${paymentMethod === method.name ? styles.paymentRadioChecked : styles.paymentRadioUnchecked}`}></div>
+                    <div className={styles.paymentLabel}>
+                      {method.icon} {method.name}
+                    </div>
+                    {/* Special icons for cards if name matches */}
+                    {(method.name.toLowerCase().includes('card') || method.name.toLowerCase().includes('payhere')) && (
+                      <div className={styles.cardIcons}>
+                        <svg className={styles.cardIcon} viewBox="0 0 48 32" fill="none">
+                          <rect width="48" height="32" rx="4" fill="white" stroke="#e5e5e5" />
+                          <text x="8" y="20" fontFamily="Arial" fontSize="10" fontWeight="bold" fill="#1a1f71">VISA</text>
+                        </svg>
+                        <svg className={styles.cardIcon} viewBox="0 0 48 32" fill="none">
+                          <rect width="48" height="32" rx="4" fill="white" stroke="#e5e5e5" />
+                          <circle cx="22" cy="16" r="8" fill="#eb001b" opacity="0.8" />
+                          <circle cx="30" cy="16" r="8" fill="#f79e1b" opacity="0.8" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  {paymentMethod === method.name && (
+                    <div className={styles.paymentDescription}>
+                      {method.name.toLowerCase().includes('cod') || method.name.toLowerCase().includes('delivery') 
+                        ? 'Pay for your order when it arrives at your doorstep!' 
+                        : `Complete your purchase using ${method.name}.`}
+                    </div>
+                  )}
+                </React.Fragment>
+              ))}
+
+              {(!storeSettings?.paymentMethods || storeSettings.paymentMethods.filter(m => m.active).length === 0) && (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
+                  No payment methods available. Please contact support.
                 </div>
               )}
             </div>
@@ -283,18 +290,6 @@ function CheckoutContent() {
                 <div className={styles.paymentLabel}>Use a different billing address</div>
               </div>
             </div>
-          </div>
-
-          {/* Newsletter Checkbox */}
-          <div className={styles.checkboxRow} onClick={() => setNewsletter(!newsletter)}>
-            <div className={`${styles.checkbox} ${newsletter ? styles.checkboxChecked : ''}`}>
-              {newsletter && (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-              )}
-            </div>
-            <div className={styles.checkboxLabel}>Email me with news and offers</div>
           </div>
 
           {/* Pay Button */}

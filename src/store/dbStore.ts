@@ -41,6 +41,12 @@ export interface HomepageSection {
   };
 }
 
+export interface PaymentMethodSetting {
+  icon: string;
+  name: string;
+  active: boolean;
+}
+
 export interface StoreSettings {
   id: string;
   storeName: string;
@@ -52,6 +58,7 @@ export interface StoreSettings {
   freeShippingEnabled: boolean;
   freeShippingThreshold: number;
   freeShippingLabel: string;
+  paymentMethods: PaymentMethodSetting[];
 }
 
 interface DbState {
@@ -213,7 +220,8 @@ export const useDbStore = create<DbState>((set, get) => ({
           maintenanceMode: s.maintenance_mode || false,
           freeShippingEnabled: s.free_shipping_enabled || false,
           freeShippingThreshold: Number(s.free_shipping_threshold) || 10000,
-          freeShippingLabel: s.free_shipping_label || 'Free delivery'
+          freeShippingLabel: s.free_shipping_label || 'Free delivery',
+          paymentMethods: Array.isArray(s.payment_methods) ? s.payment_methods : []
         };
       }
 
