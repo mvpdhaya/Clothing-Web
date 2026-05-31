@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useCartStore, CartItem } from '@/store/cartStore';
 import { useDbStore } from '@/store/dbStore';
 import { formatPrice } from '@/lib/utils';
@@ -10,9 +10,11 @@ import styles from './checkout.module.css';
 
 function CheckoutContent() {
   const searchParams = useSearchParams();
-  const { cart, cartTotal } = useCartStore();
+  const router = useRouter();
+  const { cart, cartTotal, clearCart } = useCartStore();
   const allProducts = useDbStore((state) => state.products);
   const storeSettings = useDbStore((state) => state.storeSettings);
+  const shippingRates = useDbStore((state) => state.shippingRates);
 
   const [customer, setCustomer] = useState<any>(null);
   const [addresses, setAddresses] = useState<any[]>([]);
@@ -63,6 +65,8 @@ function CheckoutContent() {
   
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [isAddAddressModalOpen, setIsAddAddressModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isProcessingOrder, setIsProcessingOrder] = useState(false);
 
   // Add Address Form State
   const [addrFirst, setAddrFirst] = useState('');
@@ -101,7 +105,9 @@ function CheckoutContent() {
     subtotal = cartTotal();
   }
 
-  const shippingFee = 450;
+  // Get shipping fee from DB (fallback to 450 if not loaded)
+  const activeShipping = shippingRates.length > 0 ? shippingRates[0] : { name: 'Sri Lanka', rate: 450 };
+  const shippingFee = activeShipping.rate;
   const total = subtotal + shippingFee;
 
   const handlePayNow = () => {
@@ -109,10 +115,91 @@ function CheckoutContent() {
       alert('Please select or add a shipping address before proceeding.');
       return;
     }
+
+    const isCOD = paymentMethod.toLowerCase().includes('cod') || paymentMethod.toLowerCase().includes('delivery');
+    
+    if (isCOD) {
+      setIsConfirmModalOpen(true);
+      return;
+    }
+
     const addrText = selectedAddress
       ? `${selectedAddress.full_name}, ${selectedAddress.line1}`
       : 'No address selected';
     alert(`Processing payment of ${formatPrice(total)} via ${paymentMethod}...\nShipping to: ${addrText}`);
+  };
+
+  const handleConfirmOrder = async () => {
+    if (!selectedAddress || isProcessingOrder) return;
+    
+    setIsProcessingOrder(true);
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert('You must be logged in to confirm an order.');
+        setIsProcessingOrder(false);
+        return;
+      }
+
+      // 1. Insert into orders table first
+      const orderId = crypto.randomUUID();
+      const isCOD = paymentMethod.toLowerCase().includes('cod') || paymentMethod.toLowerCase().includes('delivery');
+      const normalizedPayment = isCOD ? 'COD' : paymentMethod;
+
+      const orderPayload = {
+        id: orderId,
+        customer_id: user.id,
+        address_id: selectedAddress.id,
+        total: total,
+        subtotal: subtotal,
+        shipping_amount: shippingFee,
+        item_count: displayItems.reduce((acc, item) => acc + item.quantity, 0),
+        payment: normalizedPayment,
+        status: 'Pending',
+        discount_amount: 0, 
+        coupon_code: discountCode || null,
+        notes: ''
+      };
+
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert([orderPayload])
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // 2. Insert all items into order_items table
+      const orderItemsPayload = displayItems.map(item => ({
+        order_id: orderId, // Use the generated orderId
+        product_id: item.product.id,
+        product_name: item.product.name,
+        quantity: item.quantity,
+        price: item.product.price,
+        total_price: item.product.price * item.quantity,
+        image: item.product.images[0],
+        selected_size: item.selectedSize,
+        selected_color: item.selectedColor?.name
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItemsPayload);
+
+      if (itemsError) throw itemsError;
+
+      // Success!
+      setIsConfirmModalOpen(false);
+      clearCart();
+      router.push('/profile?tab=orders');
+      
+    } catch (error: any) {
+      console.error('Order creation error:', error);
+      alert(`There was an error creating your order: ${error.message || 'Please try again.'}`);
+    } finally {
+      setIsProcessingOrder(false);
+    }
   };
 
   const handleApplyDiscount = () => {
@@ -216,8 +303,8 @@ function CheckoutContent() {
               <span className={styles.sectionTitle}>Shipping method</span>
             </div>
             <div className={styles.shippingRow}>
-              <div className={styles.shippingInfo}>
-                Sri Lanka · {formatPrice(shippingFee)}
+              <div className={styles.methodPrice}>
+                {activeShipping.name} · {formatPrice(shippingFee)}
               </div>
             </div>
           </div>
@@ -613,6 +700,115 @@ function CheckoutContent() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* COD Confirmation Modal */}
+      {isConfirmModalOpen && (
+        <div 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1200,
+            padding: '20px',
+            backdropFilter: 'blur(4px)'
+          }}
+          onClick={() => setIsConfirmModalOpen(false)}
+        >
+          <div 
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: '16px',
+              width: '100%',
+              maxWidth: '440px',
+              padding: '32px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              textAlign: 'center'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ 
+              width: '60px', 
+              height: '60px', 
+              backgroundColor: '#fef3c7', 
+              borderRadius: '50%', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              margin: '0 auto 20px' 
+            }}>
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            </div>
+            
+            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', marginBottom: '12px' }}>Confirm Cash on Delivery</h2>
+            <p style={{ fontSize: '15px', color: '#4b5563', marginBottom: '24px', lineHeight: '1.5' }}>
+              Are you sure you want to place this order using Cash on Delivery? You will need to pay <strong>{formatPrice(total)}</strong> when your order arrives.
+            </p>
+            
+            <div style={{ 
+              backgroundColor: '#f9fafb', 
+              borderRadius: '12px', 
+              padding: '16px', 
+              marginBottom: '24px', 
+              textAlign: 'left' 
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontSize: '13px', color: '#6b7280' }}>Total Amount:</span>
+                <span style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>{formatPrice(total)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '13px', color: '#6b7280' }}>Payment:</span>
+                <span style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>{paymentMethod}</span>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                onClick={handleConfirmOrder}
+                disabled={isProcessingOrder}
+                style={{ 
+                  width: '100%', 
+                  padding: '14px', 
+                  backgroundColor: isProcessingOrder ? '#6b7280' : '#111827', 
+                  color: '#fff', 
+                  border: 'none', 
+                  borderRadius: '10px', 
+                  fontSize: '15px', 
+                  fontWeight: 600, 
+                  cursor: isProcessingOrder ? 'not-allowed' : 'pointer',
+                  transition: 'background-color 0.2s'
+                }}
+              >
+                {isProcessingOrder ? 'Processing...' : 'Confirm Order'}
+              </button>
+              <button
+                onClick={() => setIsConfirmModalOpen(false)}
+                disabled={isProcessingOrder}
+                style={{ 
+                  width: '100%', 
+                  padding: '14px', 
+                  backgroundColor: '#fff', 
+                  color: '#374151', 
+                  border: '1px solid #d1d5db', 
+                  borderRadius: '10px', 
+                  fontSize: '15px', 
+                  fontWeight: 500, 
+                  cursor: isProcessingOrder ? 'not-allowed' : 'pointer',
+                  opacity: isProcessingOrder ? 0.5 : 1
+                }}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

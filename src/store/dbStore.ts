@@ -47,6 +47,12 @@ export interface PaymentMethodSetting {
   active: boolean;
 }
 
+export interface ShippingRate {
+  id: string;
+  name: string;
+  rate: number;
+}
+
 export interface StoreSettings {
   id: string;
   storeName: string;
@@ -67,6 +73,7 @@ interface DbState {
   banners: Banner[];
   homepageSections: HomepageSection[];
   storeSettings: StoreSettings | null;
+  shippingRates: ShippingRate[];
   loading: boolean;
   error: string | null;
   fetchDbData: () => Promise<void>;
@@ -85,6 +92,7 @@ export const useDbStore = create<DbState>((set, get) => ({
   banners: [],
   homepageSections: [],
   storeSettings: null,
+  shippingRates: [],
   loading: true,
   error: null,
 
@@ -100,7 +108,8 @@ export const useDbStore = create<DbState>((set, get) => ({
         { data: bannersRes, error: bannersErr },
         { data: settingsRes, error: settingsErr },
         { data: homepageSectionsRes, error: homepageSectionsErr },
-        { data: gridsRes, error: gridsErr }
+        { data: gridsRes, error: gridsErr },
+        { data: shippingRes, error: shippingErr }
       ] = await Promise.all([
         supabase.from('products').select('*'),
         supabase.from('categories').select('*'),
@@ -108,7 +117,8 @@ export const useDbStore = create<DbState>((set, get) => ({
         supabase.from('promo_banners').select('*'),
         supabase.from('store_settings').select('*'),
         supabase.from('homepage_sections').select('*'),
-        supabase.from('product_grids').select('*')
+        supabase.from('product_grids').select('*'),
+        supabase.from('shipping_rates').select('*')
       ]);
 
       if (productsErr) throw productsErr;
@@ -118,6 +128,7 @@ export const useDbStore = create<DbState>((set, get) => ({
       if (settingsErr) throw settingsErr;
       if (homepageSectionsErr) throw homepageSectionsErr;
       if (gridsErr) throw gridsErr;
+      if (shippingErr) throw shippingErr;
 
       // 1. Map Products
       const products: Product[] = (productsRes || []).map((p: any) => {
@@ -293,6 +304,11 @@ export const useDbStore = create<DbState>((set, get) => ({
         banners,
         homepageSections,
         storeSettings,
+        shippingRates: (shippingRes || []).map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          rate: Number(s.rate) || 0
+        })),
         loading: false,
         error: null
       });
