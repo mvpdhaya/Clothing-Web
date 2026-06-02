@@ -142,13 +142,23 @@ const CartPage: React.FC = () => {
           {/* Order Summary */}
           {cart.length > 0 && (
             <aside className="bg-gray-50 p-7 rounded h-fit">
-              <div className="flex items-center gap-2.5 pb-5 border-b-2 border-gray-800 mb-6 text-[13px] font-medium">
-                <Truck size={20} className="text-gray-800" />
-                <span className="leading-tight text-gray-800">
-                  {isFreeShipping 
-                    ? "You've qualified for Free delivery!" 
-                    : `Free delivery on all orders over ${formatPrice(shippingFreeThreshold)}`}
-                </span>
+              <div className="pb-5 border-b-2 border-gray-800 mb-6 transition-all duration-500 ease-in-out">
+                <div className="flex items-center gap-2.5 mb-3 text-[13px] font-medium transition-colors">
+                  <Truck size={20} className={isFreeShipping ? "text-green-600" : "text-gray-800"} />
+                  <span className={`leading-tight ${isFreeShipping ? "text-green-600 font-bold" : "text-gray-800"}`}>
+                    {isFreeShipping 
+                      ? "You've qualified for Free delivery!" 
+                      : `You're ${formatPrice(shippingFreeThreshold - subtotal)} away from free delivery`}
+                  </span>
+                </div>
+                {storeSettings?.freeShippingEnabled && (
+                  <div className="relative w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className={`absolute top-0 left-0 h-full transition-all duration-700 ease-out rounded-full ${isFreeShipping ? "bg-green-500" : "bg-gray-800"}`}
+                      style={{ width: `${Math.min((subtotal / shippingFreeThreshold) * 100, 100)}%` }}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-between items-center mb-2">

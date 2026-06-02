@@ -107,7 +107,8 @@ function CheckoutContent() {
 
   // Get shipping fee from DB (fallback to 450 if not loaded)
   const activeShipping = shippingRates.length > 0 ? shippingRates[0] : { name: 'Sri Lanka', rate: 450 };
-  const shippingFee = activeShipping.rate;
+  const isFreeShipping = storeSettings?.freeShippingEnabled && subtotal >= storeSettings.freeShippingThreshold;
+  const shippingFee = isFreeShipping ? 0 : activeShipping.rate;
   const total = subtotal + shippingFee;
 
   const handlePayNow = () => {
@@ -304,7 +305,7 @@ function CheckoutContent() {
             </div>
             <div className={styles.shippingRow}>
               <div className={styles.methodPrice}>
-                {activeShipping.name} · {formatPrice(shippingFee)}
+                {activeShipping.name} · {shippingFee === 0 ? <span className="text-green-600 font-bold uppercase">Free</span> : formatPrice(shippingFee)}
               </div>
             </div>
           </div>
@@ -436,7 +437,7 @@ function CheckoutContent() {
           <div className={styles.summaryRow}>
             <div className={styles.summaryLabel}>Shipping</div>
             <div>
-              <span className={styles.summaryValue}>{formatPrice(shippingFee)}</span>
+              <span className={styles.summaryValue}>{shippingFee === 0 ? <span style={{ color: '#16a34a', fontWeight: 'bold' }}>FREE</span> : formatPrice(shippingFee)}</span>
             </div>
           </div>
 
