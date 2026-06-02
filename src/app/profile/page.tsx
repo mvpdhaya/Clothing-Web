@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useDbStore } from '@/store/dbStore';
 
 import { supabase } from '@/lib/supabase/client';
+import { X, Truck } from 'lucide-react';
 
 
 
@@ -57,6 +58,12 @@ function ProfileContent() {
   const [orders, setOrders] = useState<any[]>([]);
   const [editingAddress, setEditingAddress] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  // Order Details Modal State
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [orderItems, setOrderItems] = useState<any[]>([]);
+  const [isLoadingOrder, setIsLoadingOrder] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -151,6 +158,34 @@ function ProfileContent() {
       }
     }
     closeAddressModal();
+  };
+
+  const fetchOrderDetails = async (order: any) => {
+    setSelectedOrder(order);
+    setIsModalOpen(true);
+    setIsLoadingOrder(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('order_id', order.id);
+      
+      if (error) throw error;
+      setOrderItems(data || []);
+    } catch (err) {
+      console.error('Error fetching order items:', err);
+    } finally {
+      setIsLoadingOrder(false);
+    }
+  };
+
+  const closeDetailModal = () => {
+    setIsModalOpen(false);
+    setTimeout(() => {
+      setSelectedOrder(null);
+      setOrderItems([]);
+    }, 300);
   };
 
   const closeAddressModal = () => {
@@ -507,7 +542,11 @@ function ProfileContent() {
                       : '—';
                     const orderTotal = order.total_amount ?? order.total ?? 0;
                     return (
-                    <div key={order.id} className="bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden mb-4">
+                    <div 
+                      key={order.id} 
+                      onClick={() => fetchOrderDetails(order)}
+                      className="bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md active:scale-[0.99] transition-all duration-300 overflow-hidden mb-4 cursor-pointer group/card"
+                    >
                       {/* header row */}
                       <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-5 bg-gradient-to-r from-gray-50/50 to-white border-b border-gray-100">
                         <div className="flex flex-wrap gap-x-8 gap-y-4">
@@ -583,6 +622,126 @@ function ProfileContent() {
         </div>
           )}
       </div>
+
+      {/* ── ORDER DETAILS MODAL ── */}
+      {isModalOpen && selectedOrder && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300" 
+            onClick={closeDetailModal}
+          />
+          
+          {/* Modal Content */}
+          <div className="relative bg-white w-full max-w-2xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-300">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 flex-shrink-0">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 leading-none">Order Details</h3>
+                <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-1.5">#{selectedOrder.id.toString().toUpperCase()}</p>
+              </div>
+              <button 
+                onClick={closeDetailModal}
+                className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-50 text-gray-400 hover:text-gray-900 transition-all border border-transparent hover:border-gray-100"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Scrollable Body */}
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+              {/* Status & Info Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                <div className="p-4 bg-gray-50/50 rounded-2xl border border-gray-100/50">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</p>
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${
+                      selectedOrder.status?.toLowerCase() === 'delivered' ? 'bg-emerald-500' :
+                      selectedOrder.status?.toLowerCase() === 'processing' ? 'bg-amber-500' : 'bg-blue-500'
+                    }`} />
+                    <p className="text-sm font-bold text-gray-900">{selectedOrder.status || 'Processing'}</p>
+                  </div>
+                </div>
+                <div className="p-4 bg-gray-50/50 rounded-2xl border border-gray-100/50">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Payment Method</p>
+                  <p className="text-sm font-bold text-gray-900 uppercase">{selectedOrder.payment || 'N/A'}</p>
+                </div>
+              </div>
+
+              {/* Items List */}
+              <div className="space-y-4 mb-8">
+                <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-4 border-l-2 border-red-400 pl-3">Items Ordered</h4>
+                {isLoadingOrder ? (
+                  <div className="space-y-4">
+                    {[1, 2].map(i => (
+                      <div key={i} className="flex gap-4 animate-pulse">
+                        <div className="w-16 h-20 bg-gray-50 rounded-xl" />
+                        <div className="flex-1 space-y-2 py-1">
+                          <div className="h-4 bg-gray-50 rounded w-3/4" />
+                          <div className="h-3 bg-gray-50 rounded w-1/2" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {orderItems.map((item, idx) => (
+                      <div key={idx} className="flex items-center gap-4 py-3 border-b border-gray-50 last:border-0 group">
+                        <div className="w-16 h-20 bg-gray-50 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100 group-hover:shadow-md transition-shadow duration-300">
+                          <img src={item.image} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h5 className="text-[14px] font-bold text-gray-900 truncate mb-0.5">{item.product_name}</h5>
+                          <p className="text-[12px] text-gray-500 font-medium">
+                            {item.selected_color ? `${item.selected_color} / ` : ''}{item.selected_size}
+                          </p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className="text-[11px] font-bold bg-gray-50 text-gray-400 px-1.5 py-0.5 rounded border border-gray-100/50">x{item.quantity}</span>
+                            <span className="text-[13px] font-bold text-gray-900">Rs {Number(item.price).toLocaleString()}</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[14px] font-black text-gray-900">Rs {(item.price * item.quantity).toLocaleString()}</p>
+                        </div>
+                      </div>
+                    ))}
+                    {orderItems.length === 0 && (
+                      <div className="text-center py-6 text-gray-400 text-sm font-medium italic">No item details available.</div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Delivery Info */}
+              <div className="p-5 bg-blue-50/30 rounded-2xl border border-blue-100/50 mb-8">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-blue-100/50 flex items-center justify-center text-blue-600 flex-shrink-0">
+                    <Truck size={20} />
+                  </div>
+                  <div>
+                    <h5 className="text-[14px] font-bold text-blue-900 mb-1">Delivery Information</h5>
+                    <p className="text-[12px] text-blue-700 leading-relaxed">
+                      Your order is estimated to arrive within <span className="font-bold underline decoration-blue-300 underline-offset-2">3-5 business days</span>. 
+                      Tracking details will be sent once dispatched.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Total Footer */}
+            <div className="px-6 py-6 bg-gray-50 border-t border-gray-100 flex-shrink-0">
+              <div className="flex items-center justify-between space-y-1">
+                <p className="text-sm font-bold text-gray-900">Total Amount</p>
+                <p className="text-2xl font-black text-gray-900 leading-none tracking-tighter">
+                  Rs {Number(selectedOrder.total_amount ?? selectedOrder.total ?? 0).toLocaleString()}
+                </p>
+              </div>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Inclusive of all taxes</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── FOOTER LINKS ── */}
       <div className="bg-white border-t border-[#ddd]">
