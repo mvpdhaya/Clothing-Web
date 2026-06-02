@@ -43,15 +43,15 @@ const Navbar: React.FC = () => {
     return () => { document.body.style.overflow = ''; };
   }, [menuOpen]);
 
-  const isAccountSection = pathname === '/profile' || pathname.startsWith('/orders/');
+  const isAccountSection = pathname === '/profile';
   const activeTab = searchParams.get('tab') || 'profile';
 
   const totalItems = mounted ? cartCount() : 0;
   
   const logoName = storeSettings?.storeName || 'AXZRON';
-  const shippingMsg = storeSettings?.freeShippingEnabled
+  const shippingMsg = storeSettings?.announcementBarText || (storeSettings?.freeShippingEnabled
     ? `FREE DELIVERY ON ORDERS ABOVE LKR ${storeSettings.freeShippingThreshold.toLocaleString()}/-`
-    : 'FREE DELIVERY ON ALL ORDERS';
+    : 'FREE DELIVERY ON ALL ORDERS');
 
   // Special Navbar for checkout
   if (pathname === '/checkout') {
@@ -85,7 +85,7 @@ const Navbar: React.FC = () => {
   return (
     <>
       {/* Top Bar (Scrolls away) */}
-      <div className="overflow-hidden whitespace-nowrap bg-[#0a1628] py-1.5 text-center text-[11px] font-semibold tracking-wide text-white w-full">
+      <div className="overflow-hidden whitespace-nowrap bg-[#0a1628] py-1.5 text-center text-[11px] font-semibold tracking-wide text-white w-full uppercase">
         <div className="inline-block animate-[scroll_25s_linear_infinite]">
           {[...Array(6)].map((_, i) => (
             <span key={i} className="inline-block px-10">{shippingMsg}</span>
@@ -118,7 +118,7 @@ const Navbar: React.FC = () => {
                   <Link
                     href="/profile?tab=orders"
                     className={`text-sm font-semibold transition-all uppercase tracking-widest ${
-                      activeTab === 'orders' || pathname.startsWith('/orders/')
+                      activeTab === 'orders'
                         ? 'text-red-400'
                         : 'text-gray-800 hover:text-red-400'
                     }`}
@@ -128,7 +128,7 @@ const Navbar: React.FC = () => {
                   <Link
                     href="/profile?tab=profile"
                     className={`text-sm font-semibold transition-all uppercase tracking-widest ${
-                      activeTab === 'profile' && !pathname.startsWith('/orders/')
+                      activeTab === 'profile'
                         ? 'text-red-400'
                         : 'text-gray-800 hover:text-red-400'
                     }`}

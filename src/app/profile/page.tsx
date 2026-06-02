@@ -507,66 +507,70 @@ function ProfileContent() {
                       : '—';
                     const orderTotal = order.total_amount ?? order.total ?? 0;
                     return (
-                    <div key={order.id} className="border border-[#eee] rounded-xl overflow-hidden hover:shadow-md transition-shadow">
+                    <div key={order.id} className="bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden mb-4">
                       {/* header row */}
-                      <div className="flex flex-wrap items-start sm:items-center justify-between gap-4 px-4 sm:px-6 py-4 bg-[#fafafa] border-b border-[#eee]">
-                        <div className="flex flex-wrap gap-4 sm:gap-8 text-[12px]">
+                      <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-5 bg-gradient-to-r from-gray-50/50 to-white border-b border-gray-100">
+                        <div className="flex flex-wrap gap-x-8 gap-y-4">
                           <div>
-                            <p className="text-[10px] font-bold tracking-widest uppercase text-[#888] mb-0.5">Order ID</p>
-                            <p className="font-bold text-black">{order.id}</p>
+                            <p className="text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-1">Order ID</p>
+                            <p className="text-sm font-bold text-gray-900">#{order.id.toString().toUpperCase()}</p>
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold tracking-widest uppercase text-[#888] mb-0.5">Date</p>
-                            <p className="font-semibold text-black">{orderDate}</p>
+                            <p className="text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-1">Date</p>
+                            <p className="text-sm font-semibold text-gray-700">{orderDate}</p>
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold tracking-widest uppercase text-[#888] mb-0.5">Total</p>
-                            <p className="font-bold text-black">Rs {Number(orderTotal).toLocaleString()}</p>
+                            <p className="text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-1">Total Amount</p>
+                            <p className="text-sm font-bold text-gray-900">Rs {Number(orderTotal).toLocaleString()}</p>
                           </div>
-                          <div>
-                            <p className="text-[10px] font-bold tracking-widest uppercase text-[#888] mb-0.5">Status</p>
-                            <p className="font-semibold text-black">{order.status ?? '—'}</p>
-                          </div>
-                          {itemsArr.length > 0 && (
-                            <div>
-                              <p className="text-[10px] font-bold tracking-widest uppercase text-[#888] mb-0.5">Items</p>
-                              <p className="font-semibold text-black">{itemsArr.length} item{itemsArr.length !== 1 ? 's' : ''}</p>
-                            </div>
-                          )}
                         </div>
-                        <Link
-                          href={`/orders/${order.id}`}
-                          className="text-[12px] font-medium text-black underline underline-offset-2 hover:opacity-60 transition-opacity"
-                        >
-                          View details
-                        </Link>
+                        
+                        <div className="flex items-center gap-3">
+                          <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm ${
+                            order.status?.toLowerCase() === 'delivered' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                            order.status?.toLowerCase() === 'processing' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                            'bg-gray-50 text-gray-600 border border-gray-100'
+                          }`}>
+                            {order.status || 'Processing'}
+                          </div>
+                        </div>
                       </div>
+
                       {/* Items preview */}
                       {itemsArr.length > 0 && (
-                        <div className="px-4 sm:px-6 py-4 flex flex-wrap gap-4 border-t border-[#f5f5f5] bg-white">
-                          {itemsArr.slice(0, 5).map((item: any, idx: number) => {
-                            const product = allProducts.find(p => p.id === item.productId || p.id === item.product_id);
-                            if (!product) return (
-                              <div key={idx} className="w-16 h-20 rounded-xl bg-[#f5f5f5] border border-[#eee] flex items-center justify-center text-[10px] text-[#999]">
-                                Item
+                        <div className="px-6 py-5 flex flex-wrap items-center gap-4 bg-white">
+                          <div className="flex flex-wrap gap-4">
+                            {itemsArr.slice(0, 5).map((item: any, idx: number) => {
+                              const product = allProducts.find(p => p.id === item.productId || p.id === item.product_id);
+                              if (!product) return (
+                                <div key={idx} className="w-16 h-20 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-[10px] text-gray-400">
+                                  Item
+                                </div>
+                              );
+                              return (
+                                <Link
+                                  key={idx}
+                                  href={`/product/${product.name.toLowerCase().replace(/ /g, '-')}`}
+                                  className="group relative w-16 h-20 rounded-xl overflow-hidden bg-white border border-gray-100 transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                                >
+                                  <img src={product.images[0]} alt="" className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110" />
+                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+                                </Link>
+                              );
+                            })}
+                            {itemsArr.length > 5 && (
+                              <div className="w-16 h-20 flex flex-col items-center justify-center bg-gray-50 border border-gray-100 rounded-xl text-gray-400">
+                                <span className="text-sm font-bold text-gray-600">+{itemsArr.length - 5}</span>
+                                <span className="text-[9px] uppercase tracking-tighter font-bold">More</span>
                               </div>
-                            );
-                            return (
-                              <Link
-                                key={idx}
-                                href={`/product/${product.name.toLowerCase().replace(/ /g, '-')}`}
-                                className="block relative w-16 h-20 rounded-xl overflow-hidden bg-white border border-[#eee] transition-all hover:scale-105 hover:shadow-md"
-                              >
-                                <img src={product.images[0]} alt="" className="object-cover w-full h-full" />
-                              </Link>
-                            );
-                          })}
-                          {itemsArr.length > 5 && (
-                            <Link href={`/orders/${order.id}`} className="w-16 h-20 flex flex-col items-center justify-center bg-[#fafafa] border border-[#eee] rounded-xl text-[11px] font-bold text-[#999] hover:bg-gray-100 transition-colors">
-                              <span>+{itemsArr.length - 5}</span>
-                              <span className="text-[9px] uppercase tracking-tighter">More</span>
-                            </Link>
-                          )}
+                            )}
+                          </div>
+                          
+                          <div className="ml-auto hidden sm:block">
+                            <p className="text-[11px] text-gray-400 font-medium">
+                              {itemsArr.length} {itemsArr.length === 1 ? 'item' : 'items'} in this order
+                            </p>
+                          </div>
                         </div>
                       )}
                     </div>

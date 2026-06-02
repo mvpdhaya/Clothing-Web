@@ -47,6 +47,13 @@ export interface PaymentMethodSetting {
   active: boolean;
 }
 
+export interface SocialLinkSetting {
+  icon: string;
+  label: string;
+  value: string;
+  active: boolean;
+}
+
 export interface ShippingRate {
   id: string;
   name: string;
@@ -65,6 +72,9 @@ export interface StoreSettings {
   freeShippingThreshold: number;
   freeShippingLabel: string;
   paymentMethods: PaymentMethodSetting[];
+  socialLinks: SocialLinkSetting[];
+  announcementBarText: string | null;
+  maintenanceMessage: string;
 }
 
 interface DbState {
@@ -232,7 +242,10 @@ export const useDbStore = create<DbState>((set, get) => ({
           freeShippingEnabled: s.free_shipping_enabled || false,
           freeShippingThreshold: Number(s.free_shipping_threshold) || 10000,
           freeShippingLabel: s.free_shipping_label || 'Free delivery',
-          paymentMethods: Array.isArray(s.payment_methods) ? s.payment_methods : []
+          paymentMethods: Array.isArray(s.payment_methods) ? s.payment_methods : [],
+          socialLinks: Array.isArray(s.social_links) ? s.social_links : [],
+          announcementBarText: s.announcement_bar_text,
+          maintenanceMessage: s.maintenance_message || 'Our store is currently under maintenance. We will be back soon!'
         };
       }
 

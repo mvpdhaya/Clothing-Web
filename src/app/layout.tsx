@@ -1,10 +1,9 @@
-import React, { Suspense } from 'react';
+import React from 'react';
 import type { Metadata } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
 import './globals.css';
-import Navbar from '@/components/store/Navbar';
-import Footer from '@/components/store/Footer';
 import DbProvider from '@/components/store/DbProvider';
+import ClientLayout from '@/components/store/ClientLayout';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -34,16 +33,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${inter.variable} ${playfair.variable}`} data-scroll-behavior="smooth">
       <body className="overflow-x-clip w-full m-0 p-0 relative">
         <DbProvider>
-          <div className="flex min-h-screen flex-col overflow-x-clip">
-            <Suspense fallback={<div className="h-20 bg-white" />}>
-              <Navbar />
-            </Suspense>
-            <main className="flex-1 w-full">{children}</main>
-            <Footer />
-          </div>
+          <ClientLayout>{children}</ClientLayout>
         </DbProvider>
       </body>
     </html>
   );
 }
+
 
