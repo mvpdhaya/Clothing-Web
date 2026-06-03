@@ -122,7 +122,7 @@ export const useDbStore = create<DbState>((set, get) => ({
         { data: gridsRes, error: gridsErr },
         { data: shippingRes, error: shippingErr }
       ] = await Promise.all([
-        supabase.from('products').select('*'),
+        supabase.from('products').select('*').eq('status', 'Active'),
         supabase.from('categories').select('*'),
         supabase.from('subcategories').select('*'),
         supabase.from('promo_banners').select('*'),
