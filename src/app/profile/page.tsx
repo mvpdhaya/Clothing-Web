@@ -64,6 +64,8 @@ function ProfileContent() {
   const [orderItems, setOrderItems] = useState<any[]>([]);
   const [isLoadingOrder, setIsLoadingOrder] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -128,6 +130,28 @@ function ProfileContent() {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.push('/');
+  };
+
+  const handleCancelOrder = async (orderId: string) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: 'Cancelled' })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      // Update local state
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'Cancelled' } : o));
+      setSelectedOrder((prev: any) => prev?.id === orderId ? { ...prev, status: 'Cancelled' } : prev);
+      
+      setIsCancelConfirmOpen(false);
+      setShowSuccessToast(true);
+      setTimeout(() => setShowSuccessToast(false), 3000);
+    } catch (err) {
+      console.error('Error canceling order:', err);
+      alert('Failed to cancel order. Please try again.');
+    }
   };
 
   const saveAddress = async (e: React.FormEvent) => {
@@ -563,11 +587,28 @@ function ProfileContent() {
                             <p className="text-sm font-bold text-gray-900">Rs {Number(orderTotal).toLocaleString()}</p>
                           </div>
                         </div>
+
+                        {/* Mini Countdown Timer */}
+                        {(() => {
+                          if (!order.created_at) return null;
+                          const orderCreatedAt = new Date(order.created_at).getTime();
+                          const now = new Date().getTime();
+                          const diffMs = now - orderCreatedAt;
+                          const oneHourMs = 60 * 60 * 1000;
+                          const status = (order.status || 'Pending').toLowerCase();
+                          const isCancelable = diffMs < oneHourMs && (status === 'processing' || status === 'pending');
+
+                          if (isCancelable) {
+                            return <MiniCancellationTimer order={order} />;
+                          }
+                          return null;
+                        })()}
                         
                         <div className="flex items-center gap-3">
                           <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm ${
                             order.status?.toLowerCase() === 'delivered' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
                             order.status?.toLowerCase() === 'processing' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                            order.status?.toLowerCase() === 'cancelled' || order.status?.toLowerCase() === 'canceled' ? 'bg-red-50 text-red-600 border border-red-100' :
                             'bg-gray-50 text-gray-600 border border-gray-100'
                           }`}>
                             {order.status || 'Processing'}
@@ -634,6 +675,25 @@ function ProfileContent() {
           
           {/* Modal Content */}
           <div className="relative bg-white w-full max-w-2xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-300">
+            {/* Cancellation Timer Logic */}
+            {(() => {
+              if (!selectedOrder.created_at) return null;
+              
+              const orderCreatedAt = new Date(selectedOrder.created_at).getTime();
+              const now = new Date().getTime();
+              const diffMs = now - orderCreatedAt;
+              const oneHourMs = 60 * 60 * 1000;
+              
+              // If status is null/undefined, it's considered 'Pending'
+              const status = (selectedOrder.status || 'Pending').toLowerCase();
+              const isCancelable = diffMs < oneHourMs && (status === 'processing' || status === 'pending');
+
+              if (isCancelable) {
+                return <CancellationBanner order={selectedOrder} onCancel={() => setIsCancelConfirmOpen(true)} />;
+              }
+              return null;
+            })()}
+
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 flex-shrink-0">
               <div>
@@ -657,9 +717,10 @@ function ProfileContent() {
                   <div className="flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full ${
                       selectedOrder.status?.toLowerCase() === 'delivered' ? 'bg-emerald-500' :
-                      selectedOrder.status?.toLowerCase() === 'processing' ? 'bg-amber-500' : 'bg-blue-500'
+                      selectedOrder.status?.toLowerCase() === 'processing' ? 'bg-amber-500' :
+                      selectedOrder.status?.toLowerCase() === 'cancelled' || selectedOrder.status?.toLowerCase() === 'canceled' ? 'bg-red-500' : 'bg-blue-500'
                     }`} />
-                    <p className="text-sm font-bold text-gray-900">{selectedOrder.status || 'Processing'}</p>
+                    <p className="text-sm font-bold text-gray-900">{selectedOrder.status || 'Pending'}</p>
                   </div>
                 </div>
                 <div className="p-4 bg-gray-50/50 rounded-2xl border border-gray-100/50">
@@ -751,7 +812,143 @@ function ProfileContent() {
           <Link href="/terms"    className="text-[13px] text-black underline underline-offset-[3px] hover:opacity-70 transition-opacity">Terms of service</Link>
         </div>
       </div>
+      {/* ── MODAL: Cancellation Confirmation ── */}
+      {isCancelConfirmOpen && selectedOrder && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 overflow-hidden">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity duration-300" onClick={() => setIsCancelConfirmOpen(false)} />
+          <div className="relative bg-white w-full max-w-[400px] rounded-3xl shadow-2xl p-8 text-center animate-in zoom-in fade-in duration-300">
+            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center text-red-500 mx-auto mb-6">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">Cancel Order?</h3>
+            <p className="text-sm text-gray-500 leading-relaxed mb-8">
+              Are you sure you want to cancel this order? This action cannot be undone.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button 
+                onClick={() => handleCancelOrder(selectedOrder.id)}
+                className="w-full py-4 bg-red-600 text-white text-xs font-bold uppercase tracking-widest rounded-2xl hover:bg-red-700 transition-colors shadow-lg active:scale-95"
+              >
+                Yes, Cancel Order
+              </button>
+              <button 
+                onClick={() => setIsCancelConfirmOpen(false)}
+                className="w-full py-4 bg-gray-50 text-gray-900 text-xs font-bold uppercase tracking-widest rounded-2xl hover:bg-gray-100 transition-colors"
+              >
+                Skip
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── TOAST: Success Notification ── */}
+      {showSuccessToast && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[300] animate-in slide-in-from-bottom-2 duration-500">
+          <div className="bg-gray-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border border-white/10">
+            <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center text-white">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <p className="text-sm font-bold tracking-wide">Order canceled successfully!</p>
+          </div>
+        </div>
+      )}
     </>
+  );
+}
+
+/* ── Order Cancellation Banner ── */
+function CancellationBanner({ order, onCancel }: { order: any; onCancel: () => void }) {
+  const [timeLeft, setTimeLeft] = useState<string>('');
+
+  useEffect(() => {
+    const calculateTime = () => {
+      const orderCreatedAt = new Date(order.created_at).getTime();
+      const now = new Date().getTime();
+      const diffMs = now - orderCreatedAt;
+      const oneHourMs = 60 * 60 * 1000;
+      const remainingMs = oneHourMs - diffMs;
+
+      if (remainingMs <= 0) {
+        setTimeLeft('00:00');
+        return;
+      }
+
+      const mins = Math.floor(remainingMs / 60000);
+      const secs = Math.floor((remainingMs % 60000) / 1000);
+      setTimeLeft(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
+    };
+
+    calculateTime();
+    const interval = setInterval(calculateTime, 1000);
+    return () => clearInterval(interval);
+  }, [order]);
+
+  if (timeLeft === '00:00') return null;
+
+  return (
+    <div className="bg-red-50 border-b border-red-100 px-6 py-4 flex items-center justify-between animate-in slide-in-from-top duration-500">
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div>
+          <p className="text-[13px] font-bold text-red-900 leading-none">Cancel order before window closes</p>
+          <p className="text-[11px] text-red-600 font-medium mt-1">Time remaining: <span className="font-bold tabular-nums">{timeLeft}</span></p>
+        </div>
+      </div>
+      <button 
+        onClick={onCancel}
+        className="px-4 py-2 bg-red-600 text-white text-[11px] font-bold uppercase tracking-widest rounded-lg hover:bg-red-700 transition-colors shadow-sm active:scale-95"
+      >
+        Cancel Order
+      </button>
+    </div>
+  );
+}
+
+/* ── Mini Order Cancellation Timer for List ── */
+function MiniCancellationTimer({ order }: { order: any }) {
+  const [timeLeft, setTimeLeft] = useState<string>('');
+
+  useEffect(() => {
+    const calculateTime = () => {
+      const orderCreatedAt = new Date(order.created_at).getTime();
+      const now = new Date().getTime();
+      const diffMs = now - orderCreatedAt;
+      const oneHourMs = 60 * 60 * 1000;
+      const remainingMs = oneHourMs - diffMs;
+
+      if (remainingMs <= 0) {
+        setTimeLeft('00:00');
+        return;
+      }
+
+      const mins = Math.floor(remainingMs / 60000);
+      const secs = Math.floor((remainingMs % 60000) / 1000);
+      setTimeLeft(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
+    };
+
+    calculateTime();
+    const interval = setInterval(calculateTime, 1000);
+    return () => clearInterval(interval);
+  }, [order]);
+
+  if (timeLeft === '00:00' || !timeLeft) return null;
+
+  return (
+    <div className="flex items-center gap-2 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 animate-pulse">
+      <div className="w-2 h-2 rounded-full bg-red-500" />
+      <p className="text-[10px] font-bold text-red-700 uppercase tracking-tight">
+        Cancelable for <span className="tabular-nums underline decoration-red-200 underline-offset-2">{timeLeft}</span>
+      </p>
+    </div>
   );
 }
 
