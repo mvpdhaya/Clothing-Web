@@ -30,7 +30,7 @@ const CartPage: React.FC = () => {
   const handleCheckout = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      router.push('/login');
+      router.push(`/login?returnTo=${encodeURIComponent(window.location.pathname)}`);
     } else {
       router.push('/checkout');
     }

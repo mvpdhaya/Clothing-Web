@@ -104,7 +104,7 @@ export default function ProductDetailPage() {
   const handleBuyNow = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      router.push('/login');
+      router.push(`/login?returnTo=${encodeURIComponent(window.location.pathname)}`);
       return;
     }
 

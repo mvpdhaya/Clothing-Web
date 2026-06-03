@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useDbStore } from '@/store/dbStore';
 import { supabase } from '@/lib/supabase/client';
@@ -28,19 +29,28 @@ function GoogleIcon() {
   );
 }
 
-export default function LoginPage() {
+function LoginContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
+  
   const storeSettings = useDbStore((state) => state.storeSettings);
   const storeName = storeSettings?.storeName || 'Store';
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
     setError(null);
+
+    const redirectUrl = new URL(`${window.location.origin}/auth/callback`);
+    if (returnTo) {
+      redirectUrl.searchParams.set('next', returnTo);
+    }
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/`,
+        redirectTo: redirectUrl.toString(),
       },
     });
     if (error) {
@@ -84,9 +94,19 @@ export default function LoginPage() {
             <Link href="#" className="text-red-400 font-bold hover:underline">Privacy Policy</Link>.
           </p>
         </div>
-
-
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center">
+        <div className="text-gray-400 italic">Loading Auth...</div>
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }
