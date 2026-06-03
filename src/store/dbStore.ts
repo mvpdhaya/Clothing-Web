@@ -75,6 +75,7 @@ export interface StoreSettings {
   socialLinks: SocialLinkSetting[];
   announcementBarText: string | null;
   maintenanceMessage: string;
+  codExtraCharge: number;
 }
 
 interface DbState {
@@ -245,7 +246,8 @@ export const useDbStore = create<DbState>((set, get) => ({
           paymentMethods: Array.isArray(s.payment_methods) ? s.payment_methods : [],
           socialLinks: Array.isArray(s.social_links) ? s.social_links : [],
           announcementBarText: s.announcement_bar_text,
-          maintenanceMessage: s.maintenance_message || 'Our store is currently under maintenance. We will be back soon!'
+          maintenanceMessage: s.maintenance_message || 'Our store is currently under maintenance. We will be back soon!',
+          codExtraCharge: Number(s.cod_extra_charge) || 0
         };
       }
 

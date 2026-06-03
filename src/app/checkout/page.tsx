@@ -109,7 +109,10 @@ function CheckoutContent() {
   const activeShipping = shippingRates.length > 0 ? shippingRates[0] : { name: 'Sri Lanka', rate: 450 };
   const isFreeShipping = storeSettings?.freeShippingEnabled && subtotal >= storeSettings.freeShippingThreshold;
   const shippingFee = isFreeShipping ? 0 : activeShipping.rate;
-  const total = subtotal + shippingFee;
+  
+  const isCOD = paymentMethod.toLowerCase().includes('cod') || paymentMethod.toLowerCase().includes('delivery');
+  const codExtraCharge = isCOD ? (storeSettings?.codExtraCharge || 0) : 0;
+  const total = subtotal + shippingFee + codExtraCharge;
 
   const handlePayNow = () => {
     if (!selectedAddress) {
@@ -117,8 +120,6 @@ function CheckoutContent() {
       return;
     }
 
-    const isCOD = paymentMethod.toLowerCase().includes('cod') || paymentMethod.toLowerCase().includes('delivery');
-    
     if (isCOD) {
       setIsConfirmModalOpen(true);
       return;
@@ -145,7 +146,6 @@ function CheckoutContent() {
 
       // 1. Insert into orders table first
       const orderId = crypto.randomUUID();
-      const isCOD = paymentMethod.toLowerCase().includes('cod') || paymentMethod.toLowerCase().includes('delivery');
       const normalizedPayment = isCOD ? 'COD' : paymentMethod;
 
       const orderPayload = {
@@ -154,7 +154,7 @@ function CheckoutContent() {
         address_id: selectedAddress.id,
         total: total,
         subtotal: subtotal,
-        shipping_amount: shippingFee,
+        shipping_amount: shippingFee + codExtraCharge,
         item_count: displayItems.reduce((acc, item) => acc + item.quantity, 0),
         payment: normalizedPayment,
         status: 'Pending',
@@ -440,6 +440,13 @@ function CheckoutContent() {
               <span className={styles.summaryValue}>{shippingFee === 0 ? <span style={{ color: '#16a34a', fontWeight: 'bold' }}>FREE</span> : formatPrice(shippingFee)}</span>
             </div>
           </div>
+
+          {isCOD && codExtraCharge > 0 && (
+            <div className={styles.summaryRow}>
+              <div className={styles.summaryLabel}>COD Extra Charge</div>
+              <div className={styles.summaryValue}>{formatPrice(codExtraCharge)}</div>
+            </div>
+          )}
 
           <div className={styles.totalRow}>
             <div className={styles.totalLabel}>Total</div>
@@ -763,12 +770,22 @@ function CheckoutContent() {
               textAlign: 'left' 
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ fontSize: '13px', color: '#6b7280' }}>Total Amount:</span>
-                <span style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>{formatPrice(total)}</span>
+                <span style={{ fontSize: '13px', color: '#6b7280' }}>Subtotal:</span>
+                <span style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>{formatPrice(subtotal)}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '13px', color: '#6b7280' }}>Payment:</span>
-                <span style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>{paymentMethod}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontSize: '13px', color: '#6b7280' }}>Shipping:</span>
+                <span style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>{shippingFee === 0 ? 'FREE' : formatPrice(shippingFee)}</span>
+              </div>
+              {codExtraCharge > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '13px', color: '#6b7280' }}>COD Extra Charge:</span>
+                  <span style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>{formatPrice(codExtraCharge)}</span>
+                </div>
+              )}
+              <div style={{ display: 'flex', borderTop: '1px solid #e5e7eb', marginTop: '8px', paddingTop: '8px', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: '#111827' }}>Total Payable:</span>
+                <span style={{ fontSize: '15px', fontWeight: 700, color: '#111827' }}>{formatPrice(total)}</span>
               </div>
             </div>
             
