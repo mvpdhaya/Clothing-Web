@@ -10,7 +10,7 @@ import { useDbStore } from '@/store/dbStore';
 import ProductCardHome from '@/components/store/ProductCardHome';
 import { useCartStore } from '@/store/cartStore';
 import { cn, formatPrice } from '@/lib/utils';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 
 export default function ProductDetailPage() {
@@ -38,6 +38,7 @@ export default function ProductDetailPage() {
   const [selectedSize, setSelectedSize] = useState('');
   const [openAcc, setOpenAcc] = useState<string>('desc');
   const [sizeError, setSizeError] = useState(false);
+  const [isSizeChartModalOpen, setIsSizeChartModalOpen] = useState(false);
 
   const relatedRef = useRef<HTMLDivElement>(null);
   const accRef = useRef<HTMLDivElement>(null);
@@ -182,7 +183,14 @@ export default function ProductDetailPage() {
             )}
 
 
-            <div className="mb-5 inline-flex cursor-pointer items-center gap-2 border-b border-transparent text-sm text-[#666] transition-colors hover:border-[#666]">📏 Size Chart</div>
+            {product.sizeChart && (
+              <div 
+                onClick={() => setIsSizeChartModalOpen(true)}
+                className="mb-5 inline-flex cursor-pointer items-center gap-2 border-b border-transparent text-sm text-[#666] transition-colors hover:border-[#666]"
+              >
+                📏 Size Chart
+              </div>
+            )}
 
             {product.colors.length > 0 && (
               <>
@@ -317,6 +325,47 @@ export default function ProductDetailPage() {
           </div>
         </section>
       ))}
+      {/* Size Chart Modal */}
+      {isSizeChartModalOpen && product.sizeChart && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300" 
+            onClick={() => setIsSizeChartModalOpen(false)}
+          />
+          
+          {/* Modal Content */}
+          <div className="relative bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-300">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white sticky top-0 z-10">
+              <h3 className="text-lg font-bold text-gray-900 uppercase tracking-widest leading-none">Size Guide</h3>
+              <button 
+                onClick={() => setIsSizeChartModalOpen(false)}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-all"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Image Body */}
+            <div className="overflow-auto p-4 sm:p-10 bg-[#f9fafb] flex items-center justify-center">
+              <div className="relative w-full h-full min-h-[400px]">
+                <img 
+                  src={product.sizeChart} 
+                  alt={`${product.name} Size Chart`} 
+                  className="max-w-full h-auto mx-auto shadow-sm rounded-lg"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 bg-white border-t border-gray-100 flex justify-center">
+              <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest">Scroll or Pinch to Zoom</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

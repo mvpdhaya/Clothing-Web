@@ -171,7 +171,8 @@ export const useDbStore = create<DbState>((set, get) => ({
           isFlashSale,
           flashSaleEnds: '2026-06-30T23:59:00', // default future date
           material: p.material || 'Premium Fabric Blend',
-          fit: p.fit || 'Regular Fit'
+          fit: p.fit || 'Regular Fit',
+          sizeChart: p.size_chart
         };
       });
 

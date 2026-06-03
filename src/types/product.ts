@@ -15,5 +15,6 @@ export interface Product {
   flashSaleEnds?: string;
   material?: string;
   fit?: string;
+  sizeChart?: string;
 }
 
