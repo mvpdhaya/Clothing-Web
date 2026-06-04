@@ -172,7 +172,10 @@ export const useDbStore = create<DbState>((set, get) => ({
           flashSaleEnds: '2026-06-30T23:59:00', // default future date
           material: p.material || 'Premium Fabric Blend',
           fit: p.fit || 'Regular Fit',
-          sizeChart: p.size_chart
+          sizeChart: p.size_chart,
+          stock: typeof p.stock === 'number' ? p.stock : (p.stock ? Number(p.stock) : undefined),
+          stock_status: p.stock_status,
+          variant_inventory: p.variant_inventory || {},
         };
       });
 

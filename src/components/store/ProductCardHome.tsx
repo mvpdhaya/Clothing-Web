@@ -38,7 +38,12 @@ const ProductCardHome: React.FC<Props> = ({ product }) => {
         <h3 className="text-[13px] font-semibold text-gray-800 uppercase tracking-wide leading-tight">
           {product.name}
         </h3>
-        <div className="text-xs font-semibold text-gray-500 mt-0.5">{formatPrice(product.price)}</div>
+        <div className="mt-0.5 flex items-center justify-center gap-2">
+          <span className="text-xs font-semibold text-gray-800">{formatPrice(product.price)}</span>
+          {product.oldPrice && product.oldPrice > product.price && (
+            <span className="text-[10px] text-gray-400 line-through">{formatPrice(product.oldPrice)}</span>
+          )}
+        </div>
         
         {product.colors && product.colors.length > 0 && (
           <div className="mt-4 flex items-center justify-center gap-2">

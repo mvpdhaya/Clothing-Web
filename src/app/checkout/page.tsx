@@ -190,6 +190,46 @@ function CheckoutContent() {
 
       if (itemsError) throw itemsError;
 
+      // 3. Deduct stock from products table
+      for (const item of displayItems) {
+        try {
+          const { data: prod } = await supabase
+            .from('products')
+            .select('stock, variant_inventory')
+            .eq('id', item.product.id)
+            .single();
+
+          if (!prod) continue;
+
+          const newStock = Math.max(0, (prod.stock ?? 0) - item.quantity);
+          const updatedVariantInventory = { ...(prod.variant_inventory ?? {}) };
+          
+          // Build variant keys the same way admin does: "size-color" or "size" or "color"
+          const size = item.selectedSize;
+          const color = item.selectedColor?.name;
+          const variantKey = size && color ? `${size}-${color}` : (size || color);
+          
+          if (variantKey && updatedVariantInventory[variantKey] !== undefined) {
+            updatedVariantInventory[variantKey] = Math.max(0, updatedVariantInventory[variantKey] - item.quantity);
+          }
+
+          // Recalculate stock_status
+          const newStatus = newStock === 0 ? 'Out of Stock' : newStock < 10 ? 'Low Stock' : 'In Stock';
+
+          await supabase
+            .from('products')
+            .update({ 
+              stock: newStock, 
+              variant_inventory: updatedVariantInventory,
+              stock_status: newStatus 
+            })
+            .eq('id', item.product.id);
+        } catch (stockErr) {
+          console.warn('Stock deduction failed for product:', item.product.id, stockErr);
+          // Non-fatal: order was still created successfully
+        }
+      }
+
       // Success!
       setIsConfirmModalOpen(false);
       clearCart();

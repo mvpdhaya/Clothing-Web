@@ -16,5 +16,8 @@ export interface Product {
   material?: string;
   fit?: string;
   sizeChart?: string;
+  stock?: number;
+  stock_status?: string;
+  variant_inventory?: Record<string, number>;
 }
 

@@ -39,6 +39,7 @@ export default function ProductDetailPage() {
   const [openAcc, setOpenAcc] = useState<string>('desc');
   const [sizeError, setSizeError] = useState(false);
   const [isSizeChartModalOpen, setIsSizeChartModalOpen] = useState(false);
+  const [stockWarning, setStockWarning] = useState<string | null>(null);
 
   const relatedRef = useRef<HTMLDivElement>(null);
   const accRef = useRef<HTMLDivElement>(null);
@@ -80,7 +81,38 @@ export default function ProductDetailPage() {
   }
 
   const chgImg = (d: number) => setCurrentImg((p) => (p + d + product.images.length) % product.images.length);
-  const updQty = (d: number) => setQty((p) => Math.max(1, p + d));
+  
+  const getAvailableStock = () => {
+    if (!product) return 0;
+    const vi = product.variant_inventory || {};
+    
+    // Primary key format based on admin logic: "Size-Color" or "Size" or "Color"
+    const size = selectedSize;
+    const color = selectedColor;
+    const key = size && color ? `${size}-${color}` : (size || color);
+    
+    if (vi[key] !== undefined) return vi[key];
+    
+    // If specific combined key not found, try parts
+    if (size && vi[size] !== undefined) return vi[size];
+    if (color && vi[color] !== undefined) return vi[color];
+    
+    return product.stock !== undefined ? product.stock : 999;
+  };
+
+  const updQty = (d: number) => {
+    setQty((p) => {
+      const newQty = Math.max(1, p + d);
+      const stock = getAvailableStock();
+      if (newQty > stock) {
+        setStockWarning(`Only ${stock} items available in this variant.`);
+        return stock;
+      }
+      setStockWarning(null);
+      return newQty;
+    });
+  };
+
   const toggleAcc = (id: string) => setOpenAcc((p) => (p === id ? '' : id));
 
 
@@ -98,8 +130,26 @@ export default function ProductDetailPage() {
       setSizeError(true);
       return;
     }
+
+    const availStock = getAvailableStock();
+    let finalQty = qty;
+
+    if (qty > availStock) {
+      finalQty = availStock;
+      setQty(availStock);
+      setStockWarning(`Only ${availStock} stock available. Adjusted your quantity.`);
+      // We still proceed with the addition but with the adjusted quantity
+    } else {
+      setStockWarning(null);
+    }
+
+    if (finalQty <= 0) {
+      setStockWarning("This item is currently out of stock.");
+      return;
+    }
+
     const colorObj = product.colors.find(c => c.name === selectedColor) || product.colors[0] || { name: 'Default', hex: '' };
-    addToCart(product, qty, selectedSize, colorObj);
+    addToCart(product, finalQty, selectedSize, colorObj);
   };
 
   const handleBuyNow = async () => {
@@ -113,6 +163,26 @@ export default function ProductDetailPage() {
       setSizeError(true);
       return;
     }
+
+    const availStock = getAvailableStock();
+    let finalQty = qty;
+
+    if (qty > availStock) {
+      finalQty = availStock;
+      setQty(availStock);
+      setStockWarning(`Only ${availStock} stock available. Adjusted your quantity.`);
+      // Re-run buy now logic if user clicks again, or just use capped value?
+      // User said: "only 5 stock available that added then that 5 stock add cart or buyit now"
+      // So I proceed with finalQty.
+    } else {
+      setStockWarning(null);
+    }
+
+    if (finalQty <= 0) {
+      setStockWarning("This item is currently out of stock.");
+      return;
+    }
+
     const colorObj = product.colors.find(c => c.name === selectedColor) || product.colors[0] || { name: 'Default', hex: '' };
     
     const params = new URLSearchParams({
@@ -177,10 +247,17 @@ export default function ProductDetailPage() {
           {/* Info */}
           <div className="lg:sticky lg:top-[90px] h-fit lg:pr-2.5">
             <h1 className="mb-3 text-[22px] sm:text-[32px] font-bold uppercase tracking-wider text-[#333]">{product.name}</h1>
-            <div className="mb-2 text-2xl font-semibold text-[#333]">{formatPrice(product.price)}</div>
-            {product.oldPrice && (
-              <div className="mb-2 text-lg text-[#94a3b8] line-through">{formatPrice(product.oldPrice)}</div>
-            )}
+            <div className="mb-2 flex items-center gap-3">
+              <div className="text-2xl font-semibold text-[#333]">{formatPrice(product.price)}</div>
+              {product.oldPrice && product.oldPrice > product.price && (
+                <>
+                  <div className="text-sm text-[#94a3b8] line-through">{formatPrice(product.oldPrice)}</div>
+                  <div className="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                    {Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}% OFF
+                  </div>
+                </>
+              )}
+            </div>
 
 
             {product.sizeChart && (
@@ -215,15 +292,39 @@ export default function ProductDetailPage() {
                   Size : {selectedSize || (sizeError ? "Please Select" : "")}
                 </div>
                 <div className="mb-6 flex flex-wrap gap-2.5">
-                  {product.sizes.map((s) => (
-                    <button 
-                      key={s} 
-                      onClick={() => { setSelectedSize(s); setSizeError(false); }} 
-                      className={`relative flex h-[50px] w-[50px] items-center justify-center border-2 text-sm transition-all ${selectedSize === s ? 'border-[#333] bg-[#333] font-semibold text-white' : 'border-[#ddd] text-[#333] hover:border-[#999]'}`}
-                    >
-                      {s}
-                    </button>
-                  ))}
+                  {product.sizes.map((s) => {
+                    // Determine variant key: first try "size-color", then just "size"
+                    const vi = product.variant_inventory || {};
+                    const colorKey = selectedColor ? `${s}-${selectedColor}` : s;
+                    const sizeOnlyKey = s;
+                    const variantStock = vi[colorKey] !== undefined ? vi[colorKey] : (vi[sizeOnlyKey] !== undefined ? vi[sizeOnlyKey] : undefined);
+                    // If no variant_inventory exists, fallback to total stock (treat as in stock)
+                    const isOutOfStock = variantStock !== undefined ? variantStock <= 0 : false;
+
+                    return (
+                      <button 
+                        key={s}
+                        disabled={isOutOfStock}
+                        onClick={() => { 
+                          if (!isOutOfStock) { setSelectedSize(s); setSizeError(false); }
+                        }} 
+                        className={cn(
+                          'relative flex h-[50px] w-[50px] items-center justify-center border-2 text-sm transition-all',
+                          selectedSize === s && !isOutOfStock ? 'border-[#333] bg-[#333] font-semibold text-white' : 'border-[#ddd] text-[#333] hover:border-[#999]',
+                          isOutOfStock ? 'opacity-40 cursor-not-allowed hover:border-[#ddd]' : ''
+                        )}
+                      >
+                        {isOutOfStock && (
+                          <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <svg width="100%" height="100%" viewBox="0 0 50 50" className="absolute inset-0">
+                              <line x1="5" y1="5" x2="45" y2="45" stroke="#bc2626" strokeWidth="1.5" strokeLinecap="round"/>
+                            </svg>
+                          </span>
+                        )}
+                        {s}
+                      </button>
+                    );
+                  })}
                 </div>
               </>
             )}
@@ -241,6 +342,14 @@ export default function ProductDetailPage() {
                 Add to Cart
               </button>
             </div>
+
+            {stockWarning && (
+              <div className="mb-4 animate-in slide-in-from-top-1 fade-in duration-300">
+                <p className="text-[12px] font-bold text-red-600 bg-red-50 py-2 px-4 rounded-lg border border-red-100 italic">
+                  ⚠️ {stockWarning}
+                </p>
+              </div>
+            )}
 
             <button 
               onClick={handleBuyNow}
