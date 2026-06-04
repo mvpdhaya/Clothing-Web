@@ -174,8 +174,73 @@ const ProductCarousel: React.FC<{
 };
 
 const CategoryShowcase: React.FC = () => {
+  const homepageSections = useDbStore((state) => state.homepageSections);
   const categoryNav = useDbStore((state) => state.categoryNav);
-  
+
+  // Find the active 'categories' section from the homepage builder
+  const catSection = homepageSections.find(
+    (sec) => sec.type === 'categories' && sec.active
+  );
+  const catGrid = catSection?.categoryGrid;
+
+  // Helper: derive a readable label from a link path (e.g. /category/men → MEN)
+  const labelFromLink = (link: string) => {
+    const parts = link.replace(/\?.*$/, '').split('/').filter(Boolean);
+    const last = parts[parts.length - 1] || '';
+    return last.replace(/-/g, ' ').toUpperCase();
+  };
+
+  // If we have DB-configured category grid, render from it
+  if (catGrid) {
+    const validSlots = catGrid.slots.filter((slot) => slot.image);
+    if (validSlots.length === 0) return null;
+
+    return (
+      <section className="py-14 bg-white">
+        <div className="max-w-[1400px] mx-auto px-5">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-semibold text-gray-800 uppercase tracking-wide">
+              {catGrid.mainTitle || 'SHOP OUR TOP CATEGORIES'}
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-1">
+            {catGrid.slots.map((slot, idx) => {
+              if (!slot.image) return null;
+              
+              // Handle simple category links (e.g. "Men" -> "/category/men")
+              let href = slot.link || '/products';
+              if (href && !href.startsWith('/') && !href.startsWith('http')) {
+                href = `/category/${href.toLowerCase()}`;
+              }
+              
+              const label = labelFromLink(href);
+              return (
+                <Link
+                  key={idx}
+                  href={href}
+                  className="relative overflow-hidden aspect-[3/4] cursor-pointer group block"
+                >
+                  <img
+                    src={slot.image}
+                    alt={label}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                    <h3 className="text-white text-lg font-bold uppercase tracking-wide text-center whitespace-pre-line">
+                      {label}
+                    </h3>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Fallback: render from categoryNav (categories table)
   if (categoryNav.length === 0) return null;
 
   return (
@@ -392,13 +457,15 @@ export default function App() {
   return (
     <div className="min-h-screen bg-white animate-fade-in">
       <Hero />
-      <CategoryShowcase />
 
       {/* Dynamic sections configured via dashboard database */}
       {homepageSections.length > 0 ? (
         homepageSections
           .filter((sec) => sec.name.toLowerCase() !== 'hero banner')
           .map((section) => {
+            if (section.type === 'categories') {
+              return <CategoryShowcase key={section.id} />;
+            }
             if (section.type === 'banner') {
               return (
                 <PromoBanner 

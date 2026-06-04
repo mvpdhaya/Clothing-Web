@@ -18,11 +18,16 @@ export interface Banner {
   cta: string;
 }
 
+export interface CategoryGridSlot {
+  image: string;
+  link: string;
+}
+
 export interface HomepageSection {
   id: string;
   name: string;
   active: boolean;
-  type: 'banner' | 'products' | 'middle_banner' | 'double_banner';
+  type: 'banner' | 'products' | 'middle_banner' | 'double_banner' | 'categories';
   displayOrder: number;
   banner?: {
     imageUrl: string;
@@ -38,6 +43,10 @@ export interface HomepageSection {
     selectedSubcategories: string[];
     description: string;
     itemCount: number;
+  };
+  categoryGrid?: {
+    mainTitle: string;
+    slots: CategoryGridSlot[];
   };
 }
 
@@ -120,7 +129,8 @@ export const useDbStore = create<DbState>((set, get) => ({
         { data: settingsRes, error: settingsErr },
         { data: homepageSectionsRes, error: homepageSectionsErr },
         { data: gridsRes, error: gridsErr },
-        { data: shippingRes, error: shippingErr }
+        { data: shippingRes, error: shippingErr },
+        { data: categoryGridsRes }
       ] = await Promise.all([
         supabase.from('products').select('*').eq('status', 'Active'),
         supabase.from('categories').select('*'),
@@ -129,7 +139,8 @@ export const useDbStore = create<DbState>((set, get) => ({
         supabase.from('store_settings').select('*'),
         supabase.from('homepage_sections').select('*'),
         supabase.from('product_grids').select('*'),
-        supabase.from('shipping_rates').select('*')
+        supabase.from('shipping_rates').select('*'),
+        supabase.from('category_grids').select('*')
       ]);
 
       if (productsErr) throw productsErr;
@@ -262,10 +273,12 @@ export const useDbStore = create<DbState>((set, get) => ({
           const nameLower = (sec.name || '').toLowerCase();
           const typeLower = (sec.type || '').toLowerCase();
 
-          const type = typeLower === 'products' ? 'products' : 
-                       (typeLower === 'middle_banner' || nameLower === 'middle banner') ? 'middle_banner' : 
-                       (typeLower === 'double_banner' || typeLower === 'duble_banner' || nameLower === 'double banner' || nameLower === 'duble banner') ? 'double_banner' : 
-                       (typeLower === 'banner' || nameLower === 'hero banner') ? 'banner' : 'banner';
+          const type: HomepageSection['type'] =
+            typeLower === 'products' ? 'products' :
+            (typeLower === 'middle_banner' || nameLower === 'middle banner') ? 'middle_banner' :
+            (typeLower === 'double_banner' || typeLower === 'duble_banner' || nameLower === 'double banner' || nameLower === 'duble banner') ? 'double_banner' :
+            (typeLower === 'categories' || nameLower === 'categories') ? 'categories' :
+            (typeLower === 'banner' || nameLower === 'hero banner') ? 'banner' : 'banner';
           
           let bannerData: any = undefined;
           if (type === 'banner' || type === 'middle_banner' || type === 'double_banner') {
@@ -293,12 +306,28 @@ export const useDbStore = create<DbState>((set, get) => ({
                 source: pg.source || 'manual',
                 selectedProducts: Array.isArray(rawProducts) 
                   ? rawProducts 
-                  : (typeof rawProducts === 'string' ? rawProducts.split(',').map(s => s.trim()) : []),
+                  : (typeof rawProducts === 'string' ? rawProducts.split(',').map((s: string) => s.trim()) : []),
                 selectedSubcategories: Array.isArray(rawSubs) 
                   ? rawSubs 
-                  : (typeof rawSubs === 'string' ? rawSubs.split(',').map(s => s.trim()) : []),
+                  : (typeof rawSubs === 'string' ? rawSubs.split(',').map((s: string) => s.trim()) : []),
                 description: pg.description || '',
                 itemCount: Number(pg.item_count) || 8
+              };
+            }
+          }
+
+          let categoryGridData: HomepageSection['categoryGrid'] = undefined;
+          if (type === 'categories') {
+            const cg = (categoryGridsRes || []).find((c: any) => c.section_id === sec.id);
+            if (cg) {
+              categoryGridData = {
+                mainTitle: cg.main_title || 'SHOP OUR TOP CATEGORIES',
+                slots: [
+                  { image: cg.cat1_image || '', link: cg.cat1_link || '' },
+                  { image: cg.cat2_image || '', link: cg.cat2_link || '' },
+                  { image: cg.cat3_image || '', link: cg.cat3_link || '' },
+                  { image: cg.cat4_image || '', link: cg.cat4_link || '' },
+                ]
               };
             }
           }
@@ -310,7 +339,8 @@ export const useDbStore = create<DbState>((set, get) => ({
             type,
             displayOrder: Number(sec.display_order) || 0,
             banner: bannerData,
-            grid: gridData
+            grid: gridData,
+            categoryGrid: categoryGridData
           };
         });
 
