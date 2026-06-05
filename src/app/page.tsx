@@ -393,55 +393,6 @@ const DoubleBanner: React.FC<{ banner: any }> = ({ banner }) => {
 };
 
 
-const InstagramStrip: React.FC = () => {
-  const instagramPosts = [
-    { id: 1, image: 'https://images.unsplash.com/photo-1516257984-b1b4d707412e?w=400&h=500&fit=crop' },
-    { id: 2, image: 'https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?w=400&h=500&fit=crop' },
-    { id: 3, image: 'https://images.unsplash.com/photo-1504194921103-f8b80cadd5e4?w=400&h=500&fit=crop' },
-    { id: 4, image: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=400&h=500&fit=crop' },
-  ];
-
-  return (
-    <section className="py-14 bg-white">
-      <div className="max-w-[1400px] mx-auto px-5">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl font-semibold text-gray-800 tracking-wide mb-2">
-            SAY HELLO TO OUR INSTAGRAM
-          </h2>
-          <p className="text-sm text-gray-500">
-            Join our community for daily inspiration and a closer look at our creations
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {instagramPosts.map((post) => (
-            <div key={post.id} className="relative overflow-hidden aspect-[3/4] rounded-2xl cursor-pointer group">
-              <img
-                src={post.image}
-                alt="Instagram"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              <div className="absolute inset-0 bg-black/30 lg:bg-black/40 flex items-center justify-center opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
-                <img src="/insta.svg" alt="Instagram Icon" className="w-8 h-8" />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="text-center mt-10">
-          <Link
-            href="https://instagram.com"
-            target="_blank"
-            className="inline-block px-12 py-4 bg-black text-white font-medium rounded-full hover:bg-gray-800 hover:-translate-y-0.5 transition-all"
-          >
-            Visit Instagram
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-};
-
 export default function App() {
   const loading = useDbStore((state) => state.loading);
   const products = useDbStore((state) => state.products);
@@ -635,7 +586,6 @@ export default function App() {
         </>
       )}
 
-      <InstagramStrip />
     </div>
   );
 }
