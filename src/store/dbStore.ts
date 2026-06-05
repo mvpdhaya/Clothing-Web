@@ -237,15 +237,26 @@ export const useDbStore = create<DbState>((set, get) => ({
         return rawLink;
       };
 
+      // Append ?title= to /products links so the products page shows the banner title
+      const appendTitle = (link: string, title: string) => {
+        if (!link.startsWith('/products')) return link;
+        const encoded = encodeURIComponent(title);
+        return link.includes('?') ? `${link}&title=${encoded}` : `${link}?title=${encoded}`;
+      };
+
       const banners: Banner[] = (bannersRes || []).map((b: any) => {
+        // Use button_type (admin sets) or fallback to product_type
+        const bType = b.button_type || b.product_type || '';
         let link = b.button_link || '/products';
-        if (b.product_type && b.product_link) {
-          link = transformLink(link, b.product_type, b.product_link);
+        if (bType) {
+          link = transformLink('/products', bType, b.button_link || '');
         }
+        const bannerTitle = b.title || 'Exclusive Season';
+        link = appendTitle(link, bannerTitle);
         
         return {
           id: b.section_id || 'hero',
-          title: b.title || 'Exclusive Season',
+          title: bannerTitle,
           subtitle: b.subtitle || 'Discover premium items',
           image: b.image_url || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1600',
           link: link,
@@ -306,19 +317,31 @@ export const useDbStore = create<DbState>((set, get) => ({
           if (type === 'banner' || type === 'middle_banner' || type === 'double_banner') {
             const pb = (bannersRes || []).find((b: any) => b.section_id === sec.id);
             if (pb) {
-              let buttonLink = pb.button_link || '/products';
-              const pType = pb.product_type || '';
-              const pLink = pb.product_link || '';
+              // Use button_type (admin sets) or fallback to product_type
+              const pType = pb.button_type || pb.product_type || '';
+              // When pType is set, button_link is the raw value to transform;
+              // otherwise it's the actual URL
+              let buttonLink = '/products';
 
-              if (pType && pLink) {
-                if (pLink.includes('|')) {
-                  const links = buttonLink.split('|').map((s: any) => s.trim());
-                  const types = pType.split('|').map((s: any) => s.trim());
-                  const vals = pLink.split('|').map((s: any) => s.trim());
-                  buttonLink = links.map((l: any, i: number) => transformLink(l, types[i] || types[0], vals[i])).join(' | ');
+              if (pType && pb.button_link) {
+                // Support multi-value for double banners (pipe-separated)
+                if (pb.button_link.includes('|')) {
+                  const vals = pb.button_link.split('|').map((s: string) => s.trim());
+                  const types = pType.split('|').map((s: string) => s.trim());
+                  const titles = (pb.title || '').split('|').map((s: string) => s.trim());
+                  buttonLink = vals.map((val: string, i: number) => {
+                    const transformed = transformLink('/products', types[i] || types[0], val);
+                    return appendTitle(transformed, titles[i] || titles[0] || pb.title || '');
+                  }).join(' | ');
                 } else {
-                  buttonLink = transformLink(buttonLink, pType, pLink);
+                  buttonLink = appendTitle(
+                    transformLink('/products', pType, pb.button_link),
+                    pb.title || ''
+                  );
                 }
+              } else {
+                // No type — treat button_link as a literal URL
+                buttonLink = pb.button_link || '/products';
               }
 
               bannerData = {
