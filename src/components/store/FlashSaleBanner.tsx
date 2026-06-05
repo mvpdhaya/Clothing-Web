@@ -14,7 +14,7 @@ const FlashSaleBanner: React.FC<FlashSaleBannerProps> = ({
   title = 'FLASH SALE — UP TO 70% OFF',
   subtitle = 'Limited time. Limited stock. Act fast.',
   buttonText = 'SHOP FLASH SALE',
-  buttonLink = '/products',
+  buttonLink = '/category/flash-sale',
   imageUrl = 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=450&fit=crop',
   alignment = 'left'
 }) => {

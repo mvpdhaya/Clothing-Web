@@ -43,6 +43,8 @@ export interface HomepageSection {
     selectedSubcategories: string[];
     description: string;
     itemCount: number;
+    productType?: string;
+    productLink?: string;
   };
   categoryGrid?: {
     mainTitle: string;
@@ -222,14 +224,34 @@ export const useDbStore = create<DbState>((set, get) => ({
       });
 
       // 3. Map Banners
-      const banners: Banner[] = (bannersRes || []).map((b: any) => ({
-        id: b.section_id || 'hero',
-        title: b.title || 'Exclusive Season',
-        subtitle: b.subtitle || 'Discover premium items',
-        image: b.image_url || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1600',
-        link: b.button_link || '/products',
-        cta: b.button_text || 'Shop Now'
-      }));
+      const transformLink = (rawLink: string, type: string, val: string) => {
+        if (!type || !val) return rawLink;
+        if (type === 'category') {
+          return `/category/${val.toLowerCase().replace(/ /g, '-')}`;
+        } else if (type === 'badge') {
+          return `/products?badge=${val.toLowerCase()}`;
+        } else if (type === 'sale') {
+          const percent = parseInt(val);
+          return !isNaN(percent) ? `/products?min_offer=${percent - 10}&max_offer=${percent}` : rawLink;
+        }
+        return rawLink;
+      };
+
+      const banners: Banner[] = (bannersRes || []).map((b: any) => {
+        let link = b.button_link || '/products';
+        if (b.product_type && b.product_link) {
+          link = transformLink(link, b.product_type, b.product_link);
+        }
+        
+        return {
+          id: b.section_id || 'hero',
+          title: b.title || 'Exclusive Season',
+          subtitle: b.subtitle || 'Discover premium items',
+          image: b.image_url || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1600',
+          link: link,
+          cta: b.button_text || 'Shop Now'
+        };
+      });
 
       // Fallback banner if none exists
       if (banners.length === 0) {
@@ -284,12 +306,27 @@ export const useDbStore = create<DbState>((set, get) => ({
           if (type === 'banner' || type === 'middle_banner' || type === 'double_banner') {
             const pb = (bannersRes || []).find((b: any) => b.section_id === sec.id);
             if (pb) {
+              let buttonLink = pb.button_link || '/products';
+              const pType = pb.product_type || '';
+              const pLink = pb.product_link || '';
+
+              if (pType && pLink) {
+                if (pLink.includes('|')) {
+                  const links = buttonLink.split('|').map((s: any) => s.trim());
+                  const types = pType.split('|').map((s: any) => s.trim());
+                  const vals = pLink.split('|').map((s: any) => s.trim());
+                  buttonLink = links.map((l: any, i: number) => transformLink(l, types[i] || types[0], vals[i])).join(' | ');
+                } else {
+                  buttonLink = transformLink(buttonLink, pType, pLink);
+                }
+              }
+
               bannerData = {
                 imageUrl: pb.image_url || '',
                 title: pb.title || '',
                 subtitle: pb.subtitle || '',
                 buttonText: pb.button_text || 'Shop Now',
-                buttonLink: pb.button_link || '/products',
+                buttonLink: buttonLink,
                 alignment: pb.alignment || 'right'
               };
             }
@@ -311,7 +348,9 @@ export const useDbStore = create<DbState>((set, get) => ({
                   ? rawSubs 
                   : (typeof rawSubs === 'string' ? rawSubs.split(',').map((s: string) => s.trim()) : []),
                 description: pg.description || '',
-                itemCount: Number(pg.item_count) || 8
+                itemCount: Number(pg.item_count) || 8,
+                productType: pg.product_type || '',
+                productLink: pg.product_link || ''
               };
             }
           }

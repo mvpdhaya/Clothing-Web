@@ -27,9 +27,16 @@ function ProductsContent() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('category');
   const initialSubcategory = searchParams.get('subcategory');
+  const initialBadge = searchParams.get('badge');
+  const initialMinOffer = searchParams.get('min_offer');
+  const initialMaxOffer = searchParams.get('max_offer');
+  const pageTitle = searchParams.get('title');
 
   const [category, setCategory] = useState<string | null>(initialCategory);
   const [subcategory, setSubcategory] = useState<string | null>(initialSubcategory);
+  const [badge, setBadge] = useState<string | null>(initialBadge);
+  const [minOffer, setMinOffer] = useState<number | null>(initialMinOffer ? parseInt(initialMinOffer) : null);
+  const [maxOffer, setMaxOffer] = useState<number | null>(initialMaxOffer ? parseInt(initialMaxOffer) : null);
   const [sizes, setSizes] = useState<string[]>([]);
   const [sort, setSort] = useState('newest');
   const [gridCols, setGridCols] = useState(4);
@@ -52,20 +59,45 @@ function ProductsContent() {
 
   const products = useMemo(() => {
     let list = [...allProducts];
+    
+    // Category/Subcategory Filter
     if (category === 'Sale') list = list.filter(p => p.isSale);
     else if (category) {
       list = list.filter(p => p.category.toLowerCase() === category.toLowerCase());
     }
-    
     if (subcategory) {
       list = list.filter(p => p.subcategory.toLowerCase() === subcategory.toLowerCase());
+    }
+
+    // Badge Filter - supports multiple comma-separated values e.g. ?badge=new,sale
+    if (badge) {
+      const badges = badge.toLowerCase().split(',').map(b => b.trim());
+      list = list.filter(p => {
+        return badges.some(b => {
+          if (b === 'new') return p.isNew;
+          if (b === 'flash') return p.isFlashSale;
+          if (b === 'sale') return p.isSale;
+          return false;
+        });
+      });
+    }
+
+    // Offer/Discount Filter
+    if (minOffer !== null || maxOffer !== null) {
+      list = list.filter(p => {
+        if (!p.oldPrice || p.oldPrice <= p.price) return false;
+        const discount = ((p.oldPrice - p.price) / p.oldPrice) * 100;
+        const min = minOffer ?? 0;
+        const max = maxOffer ?? 100;
+        return discount >= min && discount <= max;
+      });
     }
 
     if (sizes.length > 0) list = list.filter(p => p.sizes.some(s => sizes.includes(s)));
     if (sort === 'price-low') list.sort((a, b) => a.price - b.price);
     if (sort === 'price-high') list.sort((a, b) => b.price - a.price);
     return list;
-  }, [allProducts, category, subcategory, sizes, sort]);
+  }, [allProducts, category, subcategory, badge, minOffer, maxOffer, sizes, sort]);
 
   if (loading) {
     return <div className="container py-40 text-center font-serif italic text-3xl text-gray-300">Loading Boutique...</div>;
@@ -103,11 +135,11 @@ function ProductsContent() {
             Home
           </Link>
           <span className="mx-2">/</span>
-          <span className="font-semibold text-white">{subcategory || category || 'Collections'}</span>
+          <span className="font-semibold text-white">{pageTitle || subcategory || category || 'Collections'}</span>
         </div>
 
         <h1 className="relative z-10 text-[28px] font-bold uppercase tracking-widest text-white drop-shadow-md lg:text-[42px]">
-          {subcategory || category || 'Our Collections'}
+          {pageTitle || subcategory || category || 'Our Collections'}
         </h1>
       </section>
 

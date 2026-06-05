@@ -59,7 +59,10 @@ const Hero: React.FC = () => {
 
   const bannerTitle = bannerData?.title || (banners.length > 0 ? banners[0].title : 'NEW SEASON ARRIVALS');
   const bannerSubtitle = bannerData?.subtitle || (banners.length > 0 ? banners[0].subtitle : 'Elevate your daily look with our latest items');
-  const bannerLink = bannerData?.buttonLink || (banners.length > 0 ? banners[0].link : '/products');
+  let bannerLink = bannerData?.buttonLink || (banners.length > 0 ? banners[0].link : '/products');
+  if (bannerLink === '/new' || bannerLink === '/new-arrivals' || bannerLink === 'new') {
+    bannerLink = '/category/new-arrivals';
+  }
   const bannerCta = bannerData?.buttonText || (banners.length > 0 ? banners[0].cta : 'SHOP NOW');
   const bannerImage = bannerData?.imageUrl || (banners.length > 0 ? banners[0].image : 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600');
 
@@ -101,7 +104,8 @@ const ProductCarousel: React.FC<{
   subtitle: string;
   products: Product[];
   sectionKey: string;
-}> = ({ title, subtitle, products, sectionKey }) => {
+  shopAllLink?: string;
+}> = ({ title, subtitle, products, sectionKey, shopAllLink }) => {
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
   const handleScroll = (direction: 'left' | 'right') => {
@@ -130,7 +134,7 @@ const ProductCarousel: React.FC<{
             {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
           </div>
           <Link
-            href="/products"
+            href={shopAllLink || "/products"}
             className="px-6 py-2 border-2 border-gray-800 text-gray-800 text-sm font-medium uppercase tracking-wide hover:bg-gray-800 hover:text-white transition-all whitespace-nowrap"
           >
             SHOP ALL
@@ -492,33 +496,94 @@ export default function App() {
             }
             if (section.type === 'products') {
               let sectionProducts: Product[] = [];
+              let shopAllLink = "/products";
+
               if (section.grid) {
                 const grid = section.grid;
+
+                // Determine the correct shop all link
+                if (grid.productType === 'category' && grid.productLink) {
+                  shopAllLink = `/category/${grid.productLink.toLowerCase().replace(/ /g, '-')}`;
+                } else if (grid.productType === 'badge' && grid.productLink) {
+                  shopAllLink = `/products?badge=${encodeURIComponent(grid.productLink.toLowerCase())}`;
+                } else if (grid.productType === 'sale' && grid.productLink) {
+                  const percent = parseInt(grid.productLink);
+                  if (!isNaN(percent)) {
+                    shopAllLink = `/products?min_offer=${percent - 10}&max_offer=${percent}`;
+                  } else {
+                    shopAllLink = "/category/on-sale";
+                  }
+                } else if (grid.selectedSubcategories && grid.selectedSubcategories.length > 0) {
+                  const slug = grid.selectedSubcategories[0].toLowerCase().replace(/ /g, '-');
+                  shopAllLink = `/category/${slug}`;
+                } else if (grid.source === 'new') {
+                  shopAllLink = "/category/new-arrivals";
+                } else if (grid.source === 'sale') {
+                  shopAllLink = "/category/on-sale";
+                } else if (grid.source === 'flash') {
+                  shopAllLink = "/category/flash-sale";
+                }
                 
-                // Prioritize explicit products or subcategories regardless of source
-                if (grid.selectedProducts && grid.selectedProducts.length > 0) {
+                // Prioritize the new productType/productLink logic if present
+                if (grid.productType === 'sale' && grid.productLink) {
+                  const maxPercent = parseInt(grid.productLink);
+                  const minPercent = maxPercent - 10;
+                  sectionProducts = products.filter(p => {
+                    if (!p.oldPrice || p.oldPrice <= p.price) return false;
+                    const discount = ((p.oldPrice - p.price) / p.oldPrice) * 100;
+                    return discount >= minPercent && discount <= maxPercent;
+                  });
+                } else if (grid.productType === 'badge' && grid.productLink) {
+                  // Support multiple comma-separated badge values e.g. "new,sale"
+                  const badges = grid.productLink.toLowerCase().split(',').map(b => b.trim());
+                  sectionProducts = products.filter(p => {
+                    return badges.some(badge => {
+                      if (badge === 'new') return p.isNew;
+                      if (badge === 'flash') return p.isFlashSale;
+                      if (badge === 'sale') return p.isSale;
+                      return false;
+                    });
+                  });
+                } else if (grid.productType === 'category' && grid.productLink) {
+                  const cat = grid.productLink.toLowerCase();
+                  sectionProducts = products.filter(p => 
+                    p.category.toLowerCase() === cat || 
+                    p.subcategory.toLowerCase() === cat
+                  );
+                } else if (grid.selectedProducts && grid.selectedProducts.length > 0) {
+                  // Legacy logic / fallback
                   sectionProducts = products.filter(p => grid.selectedProducts.includes(p.id));
                 } else if (grid.selectedSubcategories && grid.selectedSubcategories.length > 0) {
-                  // Filter by subcategory (matching case-insensitive and normalized)
                   const selectedSubs = grid.selectedSubcategories.map(s => s.toLowerCase());
                   sectionProducts = products.filter(p => 
                     selectedSubs.includes(p.subcategory.toLowerCase()) ||
-                    selectedSubs.includes(p.subcategory.replace('-', ' ').toLowerCase())
+                    selectedSubs.includes(p.subcategory.replace('-', ' ').toLowerCase()) ||
+                    selectedSubs.includes(p.category.toLowerCase())
                   );
                 } else if (grid.source === 'new') {
-                  sectionProducts = products.filter(p => p.isNew).slice(0, grid.itemCount);
+                  sectionProducts = products.filter(p => p.isNew);
                 } else if (grid.source === 'sale') {
-                  sectionProducts = products.filter(p => p.isSale).slice(0, grid.itemCount);
+                  sectionProducts = products.filter(p => p.isSale);
                 } else if (grid.source === 'flash') {
-                  sectionProducts = products.filter(p => p.isFlashSale).slice(0, grid.itemCount);
+                  sectionProducts = products.filter(p => p.isFlashSale);
                 } else {
-                  // Unknown source or manual with no selections — show all products up to itemCount
-                  sectionProducts = products.slice(0, grid.itemCount || 8);
+                  sectionProducts = products;
                 }
+
+                // Apply itemCount limit
+                sectionProducts = sectionProducts.slice(0, grid.itemCount || 8);
               } else {
                 // No grid config — fall back to all products (up to 8)
                 sectionProducts = products.slice(0, 8);
               }
+              // Append the section title to the shop all link (for products page heading)
+              const titleParam = `title=${encodeURIComponent(section.name)}`;
+              const finalShopAllLink = shopAllLink.startsWith('/category/')
+                ? shopAllLink
+                : shopAllLink.includes('?')
+                  ? `${shopAllLink}&${titleParam}`
+                  : `${shopAllLink}?${titleParam}`;
+
               return (
                 <ProductCarousel
                   key={section.id}
@@ -526,6 +591,7 @@ export default function App() {
                   subtitle={section.grid?.description || ""}
                   products={sectionProducts}
                   sectionKey={section.id}
+                  shopAllLink={finalShopAllLink}
                 />
               );
             }
@@ -539,6 +605,7 @@ export default function App() {
             subtitle="For those who deserve elegance & classy look everyday"
             products={getNewArrivals()}
             sectionKey="new"
+            shopAllLink="/category/new-arrivals"
           />
           {fallbackBanner && <PromoBanner banner={fallbackBanner} />}
           <ProductCarousel
@@ -546,12 +613,14 @@ export default function App() {
             subtitle="For those who deserve elegance & classy look everyday"
             products={getFlashSale()}
             sectionKey="flash"
+            shopAllLink="/category/flash-sale"
           />
           <ProductCarousel
             title="ON SALE"
             subtitle="For those who deserve elegance & classy look everyday"
             products={getOnSale()}
             sectionKey="onsale"
+            shopAllLink="/category/on-sale"
           />
           <DoubleBanner 
             banner={{

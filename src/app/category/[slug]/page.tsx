@@ -30,12 +30,22 @@ export default function CategoryPage() {
   const categoryName = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
   const categoryProducts = useMemo(() => {
-    if (slug.toLowerCase() === 'flash-sale' || slug.toLowerCase() === 'flash sale') {
+    const s = slug.toLowerCase();
+    if (s === 'flash-sale' || s === 'flash sale') {
       return allProducts.filter(p => p.isFlashSale);
     }
+    if (s === 'new-arrivals' || s === 'new arrivals' || s === 'new') {
+      return allProducts.filter(p => p.isNew);
+    }
+    if (s === 'on-sale' || s === 'on sale' || s === 'sale') {
+      return allProducts.filter(p => p.isSale);
+    }
+
     return allProducts.filter(p => 
-      p.category.toLowerCase() === slug.toLowerCase() ||
-      p.category.toLowerCase().replace(/ /g, '-') === slug.toLowerCase()
+      p.category.toLowerCase() === s ||
+      p.category.toLowerCase().replace(/ /g, '-') === s ||
+      p.subcategory.toLowerCase() === s ||
+      p.subcategory.toLowerCase().replace(/ /g, '-') === s
     );
   }, [slug, allProducts]);
 
